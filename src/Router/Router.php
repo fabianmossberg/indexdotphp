@@ -28,11 +28,21 @@ final class Router
     /** @var array<string, callable> */
     private array $decoders;
 
+    /** @var array{default_size: int, max_size: int, page_key: string, size_key: string} */
+    private array $paginationConfig;
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
             404 => fn(): Response => Response::error(404, 'route_not_found'),
             405 => fn(): Response => Response::error(405, 'method_not_allowed'),
+        ];
+
+        $this->paginationConfig = [
+            'default_size' => $config['default_pagination_size'] ?? 20,
+            'max_size'     => $config['max_pagination_size'] ?? 100,
+            'page_key'     => $config['pagination_query_keys']['page'] ?? 'page',
+            'size_key'     => $config['pagination_query_keys']['size'] ?? 'per_page',
         ];
 
         $this->decoders = [
@@ -182,6 +192,19 @@ final class Router
                 }
 
                 $bound = $req->withParams($params);
+
+                $page = 1;
+                $size = $this->paginationConfig['default_size'];
+                if ($route['pagination']) {
+                    $size = min(
+                        $bound->queryInt($this->paginationConfig['size_key'], $this->paginationConfig['default_size']),
+                        $this->paginationConfig['max_size'],
+                    );
+                    $page = max(1, $bound->queryInt($this->paginationConfig['page_key'], 1));
+                    $bound->setAttr('_page', $page);
+                    $bound->setAttr('_size', $size);
+                }
+
                 Request::bind($bound);
 
                 $inherited = $this->collectMiddleware($route['router']);
@@ -189,7 +212,20 @@ final class Router
                     $route['handler'],
                     [...$inherited, ...$route['middleware']],
                 );
-                return $pipeline($bound);
+                $response = $pipeline($bound);
+
+                if ($route['pagination'] && $response->total() !== null) {
+                    $total = $response->total();
+                    $pages = $total > 0 && $size > 0 ? (int) ceil($total / $size) : 0;
+                    $response->withMeta([
+                        'total' => $total,
+                        'page'  => $page,
+                        'size'  => $size,
+                        'pages' => $pages,
+                    ]);
+                }
+
+                return $response;
             }
 
             if ($pathMatched) {
@@ -243,6 +279,7 @@ final class Router
             'middleware'     => $options['middleware'] ?? [],
             'decode'         => $options['decode'] ?? [],
             'decode_failure' => $options['decode_failure'] ?? 404,
+            'pagination'     => $options['pagination'] ?? false,
             'handler'        => $handler,
         ];
     }

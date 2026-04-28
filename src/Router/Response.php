@@ -20,6 +20,8 @@ final class Response
 
     private ?string $rawBody = null;
 
+    private ?int $total = null;
+
     private function __construct(
         private int $status,
         private mixed $items,
@@ -39,6 +41,17 @@ final class Response
     {
         $r = new self($status, $items);
         $r->messages[] = $message;
+        return $r;
+    }
+
+    /** @param array<int|string, mixed> $items */
+    public static function list(array $items, int $total, ?string $message = null): self
+    {
+        $r = new self(200, $items);
+        $r->total = $total;
+        if ($message !== null) {
+            $r->messages[] = $message;
+        }
         return $r;
     }
 
@@ -117,6 +130,11 @@ final class Response
     public function status(): int
     {
         return $this->status;
+    }
+
+    public function total(): ?int
+    {
+        return $this->total;
     }
 
     public function header(string $name): ?string

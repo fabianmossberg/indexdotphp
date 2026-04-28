@@ -86,6 +86,16 @@ final class Request
         return self::current()->cookie($name);
     }
 
+    public static function page(): int
+    {
+        return self::current()->attr('_page', 1);
+    }
+
+    public static function size(): int
+    {
+        return self::current()->attr('_size', 20);
+    }
+
     private static function current(): ServerRequest
     {
         if (self::$bound === null) {
