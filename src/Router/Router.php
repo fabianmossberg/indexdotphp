@@ -128,17 +128,24 @@ final class Router
     {
         $paramNames = [];
         $regex = preg_replace_callback(
-            '#:([a-zA-Z_][a-zA-Z0-9_]*)#',
+            '#:([a-zA-Z_][a-zA-Z0-9_]*)(?:<([^>]+)>)?#',
             function (array $m) use (&$paramNames): string {
                 $paramNames[] = $m[1];
-                return '(?<' . $m[1] . '>[^/]+)';
+                $inner = $m[2] ?? '[^/]+';
+                return '(?<' . $m[1] . '>' . $inner . ')';
             },
             $pattern,
         );
 
         $specificity = [];
         foreach (explode('/', ltrim($pattern, '/')) as $segment) {
-            $specificity[] = str_starts_with($segment, ':') ? 0 : 2;
+            if (!str_starts_with($segment, ':')) {
+                $specificity[] = 2;
+            } elseif (str_contains($segment, '<')) {
+                $specificity[] = 1;
+            } else {
+                $specificity[] = 0;
+            }
         }
 
         return [
