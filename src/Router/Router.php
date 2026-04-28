@@ -8,7 +8,10 @@ final class Router
 {
     private const STANDARD_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-    /** @var list<array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}> */
+    private ?Router $parent = null;
+    private string $prefix = '';
+
+    /** @var list<array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, handler: callable, router: Router}> */
     private array $routes = [];
 
     private bool $sorted = true;
@@ -30,15 +33,23 @@ final class Router
         ];
     }
 
+    public function prefix(string $segment): self
+    {
+        $child = new self();
+        $child->parent = $this;
+        $child->prefix = $this->prefix . $segment;
+        return $child;
+    }
+
     public function onError(int $status, callable $handler): self
     {
-        $this->errorHandlers[$status] = $handler;
+        $this->root()->errorHandlers[$status] = $handler;
         return $this;
     }
 
     public function onException(callable $handler): self
     {
-        $this->exceptionHandler = $handler;
+        $this->root()->exceptionHandler = $handler;
         return $this;
     }
 
@@ -53,8 +64,11 @@ final class Router
      */
     public function match(array $methods, string $pattern, array $options, callable $handler): self
     {
-        $this->routes[] = $this->compile($methods, $pattern, $options, $handler);
-        $this->sorted = false;
+        $compiled = $this->compile($methods, $this->prefix . $pattern, $options, $handler);
+        $compiled['router'] = $this;
+        $root = $this->root();
+        $root->routes[] = $compiled;
+        $root->sorted = false;
         return $this;
     }
 
@@ -90,6 +104,10 @@ final class Router
 
     public function dispatch(?ServerRequest $req = null): Response
     {
+        if ($this->parent !== null) {
+            return $this->parent->dispatch($req);
+        }
+
         if ($req === null) {
             throw new \LogicException('SAPI-bound dispatch is not implemented yet; pass a ServerRequest.');
         }
@@ -128,9 +146,10 @@ final class Router
                 $bound = $req->withParams($params);
                 Request::bind($bound);
 
+                $inherited = $this->collectMiddleware($route['router']);
                 $pipeline = $this->buildPipeline(
                     $route['handler'],
-                    [...$this->middleware, ...$route['middleware']],
+                    [...$inherited, ...$route['middleware']],
                 );
                 return $pipeline($bound);
             }
@@ -199,5 +218,22 @@ final class Router
             $next = fn(ServerRequest $req): Response => $mw($req, $current);
         }
         return $next;
+    }
+
+    private function root(): self
+    {
+        return $this->parent === null ? $this : $this->parent->root();
+    }
+
+    /** @return list<callable> */
+    private function collectMiddleware(Router $for): array
+    {
+        $chain = [];
+        $r = $for;
+        while ($r !== null) {
+            $chain = [...$r->middleware, ...$chain];
+            $r = $r->parent;
+        }
+        return $chain;
     }
 }
