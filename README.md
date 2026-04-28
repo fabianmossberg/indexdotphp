@@ -107,6 +107,11 @@ composer test:cov   # with coverage (requires pcov or xdebug)
 
 The coverage script gates at 80%; the suite currently sits around 96%.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for commit conventions, the release
+process, and dev setup.
+
 ## License
 
 MIT
