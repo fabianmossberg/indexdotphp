@@ -171,4 +171,25 @@ final class Response
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
     }
+
+    public function send(): void
+    {
+        http_response_code($this->status);
+
+        $headers = $this->headers;
+        if ($this->status !== 204 && $this->rawBody === null && !isset($headers['Content-Type'])) {
+            $headers['Content-Type'] = 'application/json';
+        }
+
+        foreach ($headers as $name => $value) {
+            header(sprintf('%s: %s', $name, $value), true);
+        }
+
+        foreach ($this->cookies as $name => $cookie) {
+            $opts = array_change_key_case($cookie['options'], CASE_LOWER);
+            setcookie($name, $cookie['value'], $opts);
+        }
+
+        echo $this->body();
+    }
 }

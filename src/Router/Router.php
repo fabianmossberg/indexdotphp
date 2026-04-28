@@ -143,9 +143,7 @@ final class Router
             return $this->parent->dispatch($req);
         }
 
-        if ($req === null) {
-            throw new \LogicException('SAPI-bound dispatch is not implemented yet; pass a ServerRequest.');
-        }
+        $req = $req ?? ServerRequest::fromGlobals();
 
         try {
             Request::bind($req);

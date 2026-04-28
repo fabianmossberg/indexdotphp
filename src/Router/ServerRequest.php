@@ -42,6 +42,48 @@ final class ServerRequest
         $this->rawBody = $body;
     }
 
+    /**
+     * @param array<string, mixed>|null  $server
+     * @param array<string, mixed>|null  $get
+     * @param array<string, string>|null $cookies
+     */
+    public static function fromGlobals(
+        ?array $server = null,
+        ?array $get = null,
+        ?array $cookies = null,
+        ?string $body = null,
+    ): self {
+        $server  = $server  ?? $_SERVER;
+        $get     = $get     ?? $_GET;
+        $cookies = $cookies ?? $_COOKIE;
+        $body    = $body    ?? (file_get_contents('php://input') ?: '');
+
+        $method = $server['REQUEST_METHOD'] ?? 'GET';
+        $path   = parse_url($server['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+        $headers = [];
+        foreach ($server as $key => $value) {
+            if (is_string($key) && str_starts_with($key, 'HTTP_')) {
+                $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = (string) $value;
+            }
+        }
+        if (isset($server['CONTENT_TYPE'])) {
+            $headers['content-type'] = (string) $server['CONTENT_TYPE'];
+        }
+        if (isset($server['CONTENT_LENGTH'])) {
+            $headers['content-length'] = (string) $server['CONTENT_LENGTH'];
+        }
+
+        return new self(
+            method:  $method,
+            path:    $path,
+            query:   $get,
+            headers: $headers,
+            body:    $body,
+            cookies: $cookies,
+        );
+    }
+
     public function param(string $name, mixed $default = null): mixed
     {
         return $this->params[$name] ?? $default;
