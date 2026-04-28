@@ -13,8 +13,21 @@ final class Router
 
     private bool $sorted = true;
 
+    /** @var array<int, callable> */
+    private array $errorHandlers;
+
     public function __construct(array $config = [])
     {
+        $this->errorHandlers = [
+            404 => fn(): Response => Response::error(404, 'route_not_found'),
+            405 => fn(): Response => Response::error(405, 'method_not_allowed'),
+        ];
+    }
+
+    public function onError(int $status, callable $handler): self
+    {
+        $this->errorHandlers[$status] = $handler;
+        return $this;
     }
 
     /**
@@ -70,11 +83,19 @@ final class Router
 
         $path = rtrim($req->path, '/') ?: '/';
 
+        $pathMatched = false;
+        $allowedMethods = [];
+
         foreach ($this->routes as $route) {
-            if (!in_array($req->method, $route['methods'], true)) {
+            if (!preg_match($route['regex'], $path, $matches)) {
                 continue;
             }
-            if (!preg_match($route['regex'], $path, $matches)) {
+            $pathMatched = true;
+
+            if (!in_array($req->method, $route['methods'], true)) {
+                foreach ($route['methods'] as $m) {
+                    $allowedMethods[$m] = true;
+                }
                 continue;
             }
 
@@ -89,7 +110,14 @@ final class Router
             return ($route['handler'])($bound);
         }
 
-        throw new \RuntimeException('No matching route (404 handling not implemented yet).');
+        if ($pathMatched) {
+            $req->setAttr('allowed_methods', implode(', ', array_keys($allowedMethods)));
+            Request::bind($req);
+            return ($this->errorHandlers[405])($req);
+        }
+
+        Request::bind($req);
+        return ($this->errorHandlers[404])($req);
     }
 
     /**

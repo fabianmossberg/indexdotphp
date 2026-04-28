@@ -25,6 +25,16 @@ final class Request
         return self::current()->params();
     }
 
+    public static function attr(string $name, mixed $default = null): mixed
+    {
+        return self::current()->attr($name, $default);
+    }
+
+    public static function setAttr(string $name, mixed $value): void
+    {
+        self::current()->setAttr($name, $value);
+    }
+
     private static function current(): ServerRequest
     {
         if (self::$bound === null) {

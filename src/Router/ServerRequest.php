@@ -9,6 +9,9 @@ final class ServerRequest
     /** @var array<string, mixed> */
     private array $params = [];
 
+    /** @var array<string, mixed> */
+    private array $attrs = [];
+
     public function __construct(
         public readonly string $method,
         public readonly string $path,
@@ -24,6 +27,16 @@ final class ServerRequest
     public function params(): array
     {
         return $this->params;
+    }
+
+    public function attr(string $name, mixed $default = null): mixed
+    {
+        return $this->attrs[$name] ?? $default;
+    }
+
+    public function setAttr(string $name, mixed $value): void
+    {
+        $this->attrs[$name] = $value;
     }
 
     /** @internal Router populates path params after a successful match. */
