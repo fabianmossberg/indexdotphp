@@ -6,8 +6,10 @@ namespace IndexDotPhp\Router;
 
 final class Router
 {
-    /** @var list<array{method: string, pattern: string, regex: string, paramNames: list<string>, handler: callable}> */
+    /** @var list<array{method: string, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}> */
     private array $routes = [];
+
+    private bool $sorted = true;
 
     public function __construct(array $config = [])
     {
@@ -16,6 +18,7 @@ final class Router
     public function get(string $pattern, array $options, callable $handler): self
     {
         $this->routes[] = $this->compile('GET', $pattern, $handler);
+        $this->sorted = false;
         return $this;
     }
 
@@ -23,6 +26,11 @@ final class Router
     {
         if ($req === null) {
             throw new \LogicException('SAPI-bound dispatch is not implemented yet; pass a ServerRequest.');
+        }
+
+        if (!$this->sorted) {
+            usort($this->routes, fn(array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
+            $this->sorted = true;
         }
 
         $path = rtrim($req->path, '/') ?: '/';
@@ -50,7 +58,7 @@ final class Router
     }
 
     /**
-     * @return array{method: string, pattern: string, regex: string, paramNames: list<string>, handler: callable}
+     * @return array{method: string, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}
      */
     private function compile(string $method, string $pattern, callable $handler): array
     {
@@ -64,12 +72,18 @@ final class Router
             $pattern,
         );
 
+        $specificity = [];
+        foreach (explode('/', ltrim($pattern, '/')) as $segment) {
+            $specificity[] = str_starts_with($segment, ':') ? 0 : 2;
+        }
+
         return [
-            'method'     => $method,
-            'pattern'    => $pattern,
-            'regex'      => '#\A' . $regex . '\z#u',
-            'paramNames' => $paramNames,
-            'handler'    => $handler,
+            'method'      => $method,
+            'pattern'     => $pattern,
+            'regex'       => '#\A' . $regex . '\z#u',
+            'paramNames'  => $paramNames,
+            'specificity' => $specificity,
+            'handler'     => $handler,
         ];
     }
 }
