@@ -80,6 +80,44 @@ php -S localhost:8000 -t public public/index.php
 - **Errors**: `Router::onError($status, callable)` for 404 / 405 / decode failures, `Router::onException(callable)` for top-level catch
 - **Built-in middleware**: `IndexDotPhp\Router\Middleware\Timing` (Server-Timing header)
 
+## Timing
+
+Ship-with-the-library middleware that adds a [`Server-Timing`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing)
+header. Wrap operations you want to profile with `Timing::measure()` to break
+them out into named sub-spans:
+
+```php
+use IndexDotPhp\Router\Middleware\Timing;
+
+$router->use(new Timing());
+
+$router->get('/users', [], function (): Response {
+    $users = Timing::measure('db.users',  fn() => getUsers());
+    $count = Timing::measure('db.count',  fn() => countUsers());
+    $body  = Timing::measure('render',    fn() => renderUsers($users));
+
+    return Response::ok(['users' => $body, 'count' => $count]);
+});
+```
+
+Result:
+
+```
+Server-Timing: db.users;dur=43.7, db.count;dur=4.2, render;dur=12.5, total;dur=60.5
+```
+
+Each entry shows up as its own row in browser dev tools (Chrome: Network →
+Timing tab; Firefox: Performance panel). `total` is recorded automatically;
+all other entries come from `measure()` calls. Repeated measures with the
+same name accumulate — useful for summing multiple DB calls under one
+label. `measure()` returns the closure's result, and uses `try/finally` so
+the time is recorded even if the closure throws.
+
+For traditional PHP-FPM (one request per process) you can register `Timing`
+anywhere in your middleware chain. For long-running servers (Swoole,
+RoadRunner), put it first — the middleware resets recorded entries on each
+invocation, so any `measure()` calls before it runs are discarded.
+
 ## Wire envelope
 
 Every JSON response uses the same shape:
