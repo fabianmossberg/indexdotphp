@@ -9,7 +9,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('runs the int decoder and coerces the matched param to a real int', function () {
     $router = new Router();
-    $router->get('/users/:id', ['decode' => ['id' => 'int']], fn(): Response => Response::ok([
+    $router->get('/users/:id', ['decode' => ['id' => 'int']], fn (): Response => Response::ok([
         'id'   => Request::param('id'),
         'type' => gettype(Request::param('id')),
     ]));
@@ -21,7 +21,7 @@ it('runs the int decoder and coerces the matched param to a real int', function 
 
 it('returns 404 when the int decoder rejects non-digit input', function () {
     $router = new Router();
-    $router->get('/users/:id', ['decode' => ['id' => 'int']], fn(): Response => Response::ok([]));
+    $router->get('/users/:id', ['decode' => ['id' => 'int']], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/abc'));
 
@@ -31,10 +31,12 @@ it('returns 404 when the int decoder rejects non-digit input', function () {
 
 it('uses a custom decoder registered via registerDecoder', function () {
     $router = new Router();
-    $router->registerDecoder('hex', fn(string $s): ?string =>
+    $router->registerDecoder(
+        'hex',
+        fn (string $s): ?string =>
         preg_match('/^[a-f0-9]+$/i', $s) ? strtolower($s) : null
     );
-    $router->get('/x/:hash', ['decode' => ['hash' => 'hex']], fn(): Response => Response::ok([
+    $router->get('/x/:hash', ['decode' => ['hash' => 'hex']], fn (): Response => Response::ok([
         'hash' => Request::param('hash'),
     ]));
 
@@ -48,7 +50,7 @@ it('returns 400 when decode_failure is set to 400', function () {
     $router->get('/users/:id', [
         'decode'         => ['id' => 'int'],
         'decode_failure' => 400,
-    ], fn(): Response => Response::ok([]));
+    ], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/abc'));
 
@@ -57,7 +59,7 @@ it('returns 400 when decode_failure is set to 400', function () {
 
 it('built-in slug decoder accepts valid slugs and rejects others', function () {
     $router = new Router();
-    $router->get('/posts/:slug', ['decode' => ['slug' => 'slug']], fn(): Response => Response::ok([
+    $router->get('/posts/:slug', ['decode' => ['slug' => 'slug']], fn (): Response => Response::ok([
         'slug' => Request::param('slug'),
     ]));
 
@@ -71,10 +73,10 @@ it('built-in slug decoder accepts valid slugs and rejects others', function () {
 
 it('parses comma-separated lists via csv-int and csv-string', function () {
     $router = new Router();
-    $router->get('/ints/:ids',  ['decode' => ['ids'   => 'csv-int']],    fn(): Response => Response::ok([
+    $router->get('/ints/:ids', ['decode' => ['ids'   => 'csv-int']], fn (): Response => Response::ok([
         'ids' => Request::param('ids'),
     ]));
-    $router->get('/tags/:names', ['decode' => ['names' => 'csv-string']], fn(): Response => Response::ok([
+    $router->get('/tags/:names', ['decode' => ['names' => 'csv-string']], fn (): Response => Response::ok([
         'names' => Request::param('names'),
     ]));
 

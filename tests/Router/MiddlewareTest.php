@@ -13,7 +13,7 @@ it('runs a single global middleware before the handler', function () {
         $req->setAttr('mw', 'ran');
         return $next($req);
     });
-    $router->get('/x', [], fn(): Response => Response::ok(['attr' => Request::attr('mw')]));
+    $router->get('/x', [], fn (): Response => Response::ok(['attr' => Request::attr('mw')]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
@@ -30,7 +30,7 @@ it('runs multiple global middlewares in registration order', function () {
         $req->setAttr('trail', $req->attr('trail', '') . 'B');
         return $next($req);
     });
-    $router->get('/x', [], fn(): Response => Response::ok(['trail' => Request::attr('trail')]));
+    $router->get('/x', [], fn (): Response => Response::ok(['trail' => Request::attr('trail')]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
@@ -42,7 +42,7 @@ it('lets middleware short-circuit by not calling next', function () {
     $router->use(function (ServerRequest $req, callable $next): Response {
         return Response::error(401, 'denied');
     });
-    $router->get('/x', [], fn(): Response => Response::ok(['handler' => 'reached']));
+    $router->get('/x', [], fn (): Response => Response::ok(['handler' => 'reached']));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
@@ -63,7 +63,7 @@ it('runs per-route middleware after global middleware', function () {
                 return $next($req);
             },
         ],
-    ], fn(): Response => Response::ok(['trail' => Request::attr('trail') . 'handler']));
+    ], fn (): Response => Response::ok(['trail' => Request::attr('trail') . 'handler']));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
@@ -76,7 +76,7 @@ it('lets middleware see and replace the response on the way out', function () {
         $inner = $next($req);
         return Response::ok(['wrapped' => true, 'inner_status' => $inner->status()]);
     });
-    $router->get('/x', [], fn(): Response => Response::ok(['handler' => true]));
+    $router->get('/x', [], fn (): Response => Response::ok(['handler' => true]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 

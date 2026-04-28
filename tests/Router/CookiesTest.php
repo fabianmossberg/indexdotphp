@@ -9,7 +9,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('reads a cookie via Request::cookie() and falls back to null', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'session' => Request::cookie('session'),
         'missing' => Request::cookie('missing'),
     ]));

@@ -8,7 +8,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('auto-handles HEAD by running the GET handler and stripping the body', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok(['msg' => 'hi']));
+    $router->get('/x', [], fn (): Response => Response::ok(['msg' => 'hi']));
 
     $response = $router->dispatch(new ServerRequest(method: 'HEAD', path: '/x'));
 
@@ -18,8 +18,8 @@ it('auto-handles HEAD by running the GET handler and stripping the body', functi
 
 it('auto-handles OPTIONS with Allow listing registered methods plus HEAD and OPTIONS', function () {
     $router = new Router();
-    $router->get('/x',  [], fn(): Response => Response::ok([]));
-    $router->post('/x', [], fn(): Response => Response::ok([]));
+    $router->get('/x', [], fn (): Response => Response::ok([]));
+    $router->post('/x', [], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'OPTIONS', path: '/x'));
 
@@ -29,7 +29,7 @@ it('auto-handles OPTIONS with Allow listing registered methods plus HEAD and OPT
 
 it('omits HEAD from Allow when no GET is registered for the path', function () {
     $router = new Router();
-    $router->post('/x', [], fn(): Response => Response::ok([]));
+    $router->post('/x', [], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'OPTIONS', path: '/x'));
 
@@ -38,7 +38,7 @@ it('omits HEAD from Allow when no GET is registered for the path', function () {
 
 it('returns 404 for OPTIONS on an unmatched path', function () {
     $router = new Router();
-    $router->get('/exists', [], fn(): Response => Response::ok([]));
+    $router->get('/exists', [], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'OPTIONS', path: '/missing'));
 
@@ -47,8 +47,8 @@ it('returns 404 for OPTIONS on an unmatched path', function () {
 
 it('lets an explicit HEAD route win over the auto-HEAD handler', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok(['from' => 'GET']));
-    $router->match(['HEAD'], '/x', [], fn(): Response => Response::ok(['from' => 'HEAD-explicit']));
+    $router->get('/x', [], fn (): Response => Response::ok(['from' => 'GET']));
+    $router->match(['HEAD'], '/x', [], fn (): Response => Response::ok(['from' => 'HEAD-explicit']));
 
     $response = $router->dispatch(new ServerRequest(method: 'HEAD', path: '/x'));
 
@@ -57,8 +57,8 @@ it('lets an explicit HEAD route win over the auto-HEAD handler', function () {
 
 it('lets an explicit OPTIONS route win over the auto-OPTIONS handler', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([]));
-    $router->match(['OPTIONS'], '/x', [], fn(): Response => Response::ok(['from' => 'OPTIONS-explicit']));
+    $router->get('/x', [], fn (): Response => Response::ok([]));
+    $router->match(['OPTIONS'], '/x', [], fn (): Response => Response::ok(['from' => 'OPTIONS-explicit']));
 
     $response = $router->dispatch(new ServerRequest(method: 'OPTIONS', path: '/x'));
 

@@ -9,7 +9,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('accepts() returns true for an exact match in the Accept header', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'csv'  => Request::accepts('text/csv'),
         'json' => Request::accepts('application/json'),
     ]));
@@ -25,7 +25,7 @@ it('accepts() returns true for an exact match in the Accept header', function ()
 
 it('accepts() honours type/* and */* wildcards', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'html'  => Request::accepts('text/html'),
         'plain' => Request::accepts('text/plain'),
         'json'  => Request::accepts('application/json'),
@@ -42,7 +42,7 @@ it('accepts() honours type/* and */* wildcards', function () {
 
 it('accepts() returns false when the most-specific match has q=0', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'html' => Request::accepts('text/html'),
     ]));
 
@@ -57,7 +57,7 @@ it('accepts() returns false when the most-specific match has q=0', function () {
 
 it('accepts() returns true when no Accept header is present', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'json' => Request::accepts('application/json'),
     ]));
 
@@ -68,7 +68,7 @@ it('accepts() returns true when no Accept header is present', function () {
 
 it('preferredContentType() picks the highest-q supported type', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'pick' => Request::preferredContentType(['application/json', 'text/csv']),
     ]));
 
@@ -83,7 +83,7 @@ it('preferredContentType() picks the highest-q supported type', function () {
 
 it('preferredContentType() returns null when nothing supported is acceptable', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'pick' => Request::preferredContentType(['application/xml']),
     ]));
 

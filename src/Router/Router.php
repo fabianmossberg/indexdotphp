@@ -37,8 +37,8 @@ final class Router
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
-            404 => fn(): Response => Response::error(404, 'route_not_found'),
-            405 => fn(): Response => Response::error(405, 'method_not_allowed'),
+            404 => fn (): Response => Response::error(404, 'route_not_found'),
+            405 => fn (): Response => Response::error(405, 'method_not_allowed'),
         ];
 
         $this->paginationConfig = [
@@ -49,9 +49,9 @@ final class Router
         ];
 
         $this->decoders = [
-            'int'        => fn(string $s): ?int => ctype_digit($s) ? (int) $s : null,
-            'string'     => fn(string $s): string => $s,
-            'slug'       => fn(string $s): ?string => preg_match('/^[a-z0-9-]+$/', $s) ? $s : null,
+            'int'        => fn (string $s): ?int => ctype_digit($s) ? (int) $s : null,
+            'string'     => fn (string $s): string => $s,
+            'slug'       => fn (string $s): ?string => preg_match('/^[a-z0-9-]+$/', $s) ? $s : null,
             'csv-int'    => function (string $s): ?array {
                 $parts = explode(',', $s);
                 foreach ($parts as $p) {
@@ -61,7 +61,7 @@ final class Router
                 }
                 return array_map('intval', $parts);
             },
-            'csv-string' => fn(string $s): array => explode(',', $s),
+            'csv-string' => fn (string $s): array => explode(',', $s),
         ];
     }
 
@@ -181,7 +181,7 @@ final class Router
             Request::bind($req);
 
             if (!$this->sorted) {
-                usort($this->routes, fn(array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
+                usort($this->routes, fn (array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
                 $this->sorted = true;
             }
 
@@ -265,7 +265,7 @@ final class Router
                 if ($value === null) {
                     $status = $route['decode_failure'];
                     $handler = $this->errorHandlers[$status]
-                        ?? fn(): Response => Response::error($status, 'decode_failed');
+                        ?? fn (): Response => Response::error($status, 'decode_failed');
                     return $handler($req);
                 }
             }
@@ -364,7 +364,7 @@ final class Router
         $next = $handler;
         foreach (array_reverse($middlewares) as $mw) {
             $current = $next;
-            $next = fn(ServerRequest $req): Response => $mw($req, $current);
+            $next = fn (ServerRequest $req): Response => $mw($req, $current);
         }
         return $next;
     }

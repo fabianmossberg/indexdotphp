@@ -10,7 +10,7 @@ use IndexDotPhp\Router\ServerRequest;
 it('prepends the prefix to routes registered on a sub-router', function () {
     $router = new Router();
     $api = $router->prefix('/api');
-    $api->get('/users', [], fn(): Response => Response::ok(['route' => 'users']));
+    $api->get('/users', [], fn (): Response => Response::ok(['route' => 'users']));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/users'));
 
@@ -22,7 +22,7 @@ it('handles nested sub-routers with cumulative prefixes', function () {
     $router = new Router();
     $api = $router->prefix('/api');
     $v1  = $api->prefix('/v1');
-    $v1->get('/users', [], fn(): Response => Response::ok(['nested' => true]));
+    $v1->get('/users', [], fn (): Response => Response::ok(['nested' => true]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/v1/users'));
 
@@ -50,7 +50,7 @@ it('runs sub-router middleware after parent and before per-route middleware', fu
                 return $next($req);
             },
         ],
-    ], fn(): Response => Response::ok(['trail' => Request::attr('trail') . 'handler']));
+    ], fn (): Response => Response::ok(['trail' => Request::attr('trail') . 'handler']));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/x'));
 
@@ -60,9 +60,9 @@ it('runs sub-router middleware after parent and before per-route middleware', fu
 it('does not apply sub-router middleware to routes outside the sub-router', function () {
     $router = new Router();
     $api = $router->prefix('/api');
-    $api->use(fn(ServerRequest $r, callable $next): Response => Response::error(401, 'denied'));
+    $api->use(fn (ServerRequest $r, callable $next): Response => Response::error(401, 'denied'));
 
-    $router->get('/public', [], fn(): Response => Response::ok(['public' => true]));
+    $router->get('/public', [], fn (): Response => Response::ok(['public' => true]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/public'));
 
@@ -73,7 +73,7 @@ it('does not apply sub-router middleware to routes outside the sub-router', func
 it('uses the root error handlers for unmatched paths under a sub-router prefix', function () {
     $router = new Router();
     $api = $router->prefix('/api');
-    $api->get('/users', [], fn(): Response => Response::ok([]));
+    $api->get('/users', [], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/nope'));
 

@@ -9,7 +9,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('reads a query param via Request::query and falls back to the default', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'value'   => Request::query('q'),
         'default' => Request::query('missing', 'def'),
     ]));
@@ -25,7 +25,7 @@ it('reads a query param via Request::query and falls back to the default', funct
 
 it('coerces query params to int via queryInt; non-digit input returns the default', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'page'   => Request::queryInt('page'),
         'broken' => Request::queryInt('broken', 99),
     ]));
@@ -41,7 +41,7 @@ it('coerces query params to int via queryInt; non-digit input returns the defaul
 
 it('coerces query params to bool via queryBool with case-insensitive truthy values', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'a' => Request::queryBool('a'),
         'b' => Request::queryBool('b'),
         'c' => Request::queryBool('c'),
@@ -59,7 +59,7 @@ it('coerces query params to bool via queryBool with case-insensitive truthy valu
 
 it('returns the raw request body via Request::body()', function () {
     $router = new Router();
-    $router->post('/x', [], fn(): Response => Response::ok(['raw' => Request::body()]));
+    $router->post('/x', [], fn (): Response => Response::ok(['raw' => Request::body()]));
 
     $response = $router->dispatch(new ServerRequest(
         method: 'POST',
@@ -72,7 +72,7 @@ it('returns the raw request body via Request::body()', function () {
 
 it('parses a JSON body to an associative array via Request::bodyJson()', function () {
     $router = new Router();
-    $router->post('/x', [], fn(): Response => Response::ok(Request::bodyJson()));
+    $router->post('/x', [], fn (): Response => Response::ok(Request::bodyJson()));
 
     $response = $router->dispatch(new ServerRequest(
         method: 'POST',
@@ -85,7 +85,7 @@ it('parses a JSON body to an associative array via Request::bodyJson()', functio
 
 it('looks up headers case-insensitively via Request::header()', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'lower' => Request::header('content-type'),
         'mixed' => Request::header('Content-Type'),
         'upper' => Request::header('CONTENT-TYPE'),
@@ -103,7 +103,7 @@ it('looks up headers case-insensitively via Request::header()', function () {
 
 it('exposes method and path via the Request facade', function () {
     $router = new Router();
-    $router->any('/users/:id', [], fn(): Response => Response::ok([
+    $router->any('/users/:id', [], fn (): Response => Response::ok([
         'method' => Request::method(),
         'path'   => Request::path(),
     ]));
@@ -115,7 +115,7 @@ it('exposes method and path via the Request facade', function () {
 
 it('returns all headers (lowercased) via Request::headers()', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok(Request::headers()));
+    $router->get('/x', [], fn (): Response => Response::ok(Request::headers()));
 
     $response = $router->dispatch(new ServerRequest(
         method:  'GET',

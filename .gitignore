@@ -6,6 +6,9 @@
 /.phpunit.result.cache
 /.phpunit.cache/
 
+# php-cs-fixer
+/.php-cs-fixer.cache
+
 # OS
 .DS_Store
 

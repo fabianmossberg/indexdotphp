@@ -8,7 +8,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('registers each HTTP verb method', function (string $method, string $fn) {
     $router = new Router();
-    $router->{$fn}('/x', [], fn(): Response => Response::ok(['m' => $method]));
+    $router->{$fn}('/x', [], fn (): Response => Response::ok(['m' => $method]));
 
     $response = $router->dispatch(new ServerRequest(method: $method, path: '/x'));
 
@@ -24,15 +24,15 @@ it('registers each HTTP verb method', function (string $method, string $fn) {
 
 it('registers multiple methods for one pattern via match()', function () {
     $router = new Router();
-    $router->match(['GET', 'POST'], '/foo', [], fn(): Response => Response::ok(['ok' => true]));
+    $router->match(['GET', 'POST'], '/foo', [], fn (): Response => Response::ok(['ok' => true]));
 
-    expect($router->dispatch(new ServerRequest(method: 'GET',  path: '/foo'))->status())->toBe(200);
+    expect($router->dispatch(new ServerRequest(method: 'GET', path: '/foo'))->status())->toBe(200);
     expect($router->dispatch(new ServerRequest(method: 'POST', path: '/foo'))->status())->toBe(200);
 });
 
 it('matches all standard verbs via any()', function () {
     $router = new Router();
-    $router->any('/x', [], fn(): Response => Response::ok(['ok' => true]));
+    $router->any('/x', [], fn (): Response => Response::ok(['ok' => true]));
 
     foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $method) {
         expect($router->dispatch(new ServerRequest(method: $method, path: '/x'))->status())->toBe(200);

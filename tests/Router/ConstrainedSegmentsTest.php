@@ -9,7 +9,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('matches a constrained dynamic segment when the value satisfies the regex', function () {
     $router = new Router();
-    $router->get('/users/:id<\d+>', [], fn(): Response => Response::ok([
+    $router->get('/users/:id<\d+>', [], fn (): Response => Response::ok([
         'id' => Request::param('id'),
     ]));
 
@@ -21,7 +21,7 @@ it('matches a constrained dynamic segment when the value satisfies the regex', f
 
 it('does not match a constrained segment when the value violates the regex', function () {
     $router = new Router();
-    $router->get('/users/:id<\d+>', [], fn(): Response => Response::ok([]));
+    $router->get('/users/:id<\d+>', [], fn (): Response => Response::ok([]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/abc'));
 
@@ -30,8 +30,8 @@ it('does not match a constrained segment when the value violates the regex', fun
 
 it('ranks a constrained segment above an unconstrained one for the same path', function () {
     $router = new Router();
-    $router->get('/users/:slug',    [], fn(): Response => Response::ok(['route' => 'slug']));
-    $router->get('/users/:id<\d+>', [], fn(): Response => Response::ok(['route' => 'id']));
+    $router->get('/users/:slug', [], fn (): Response => Response::ok(['route' => 'slug']));
+    $router->get('/users/:id<\d+>', [], fn (): Response => Response::ok(['route' => 'id']));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
 
@@ -40,7 +40,7 @@ it('ranks a constrained segment above an unconstrained one for the same path', f
 
 it('captures across slashes when the constraint allows it (multi-segment)', function () {
     $router = new Router();
-    $router->get('/files/:path<.+>', [], fn(): Response => Response::ok([
+    $router->get('/files/:path<.+>', [], fn (): Response => Response::ok([
         'path' => Request::param('path'),
     ]));
 

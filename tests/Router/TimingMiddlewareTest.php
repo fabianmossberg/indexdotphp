@@ -10,7 +10,7 @@ use IndexDotPhp\Router\ServerRequest;
 it('adds a Server-Timing header to the response without breaking dispatch', function () {
     $router = new Router();
     $router->use(new Timing());
-    $router->get('/x', [], fn(): Response => Response::ok(['ok' => true]));
+    $router->get('/x', [], fn (): Response => Response::ok(['ok' => true]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
@@ -37,8 +37,8 @@ it('records named sub-spans alongside the total via Timing::measure()', function
     $router = new Router();
     $router->use(new Timing());
     $router->get('/x', [], function (): Response {
-        Timing::measure('db', fn() => usleep(500));
-        Timing::measure('render', fn() => usleep(500));
+        Timing::measure('db', fn () => usleep(500));
+        Timing::measure('render', fn () => usleep(500));
         return Response::ok([]);
     });
 
@@ -53,8 +53,8 @@ it('records named sub-spans alongside the total via Timing::measure()', function
 it('returns the closure result from Timing::measure()', function () {
     $router = new Router();
     $router->use(new Timing());
-    $router->get('/x', [], fn(): Response => Response::ok([
-        'value' => Timing::measure('compute', fn() => 6 * 7),
+    $router->get('/x', [], fn (): Response => Response::ok([
+        'value' => Timing::measure('compute', fn () => 6 * 7),
     ]));
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
@@ -66,8 +66,8 @@ it('accumulates time when the same name is measured multiple times', function ()
     $router = new Router();
     $router->use(new Timing());
     $router->get('/x', [], function (): Response {
-        Timing::measure('db', fn() => usleep(500));
-        Timing::measure('db', fn() => usleep(500));
+        Timing::measure('db', fn () => usleep(500));
+        Timing::measure('db', fn () => usleep(500));
         return Response::ok([]);
     });
 
@@ -80,7 +80,7 @@ it('accumulates time when the same name is measured multiple times', function ()
 it('still records a Timing::measure() entry when the closure throws', function () {
     $router = new Router();
     $router->use(new Timing());
-    $router->onException(fn(Throwable $e): Response => Response::error(500, $e->getMessage()));
+    $router->onException(fn (Throwable $e): Response => Response::error(500, $e->getMessage()));
     $router->get('/x', [], function (): Response {
         Timing::measure('failing', function () {
             usleep(200);

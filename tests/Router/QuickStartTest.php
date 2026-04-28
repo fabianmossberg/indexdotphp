@@ -10,7 +10,7 @@ use IndexDotPhp\Router\ServerRequest;
 it('returns a greeting from a path param', function () {
     $router = new Router();
 
-    $router->get('/hello/:name', [], fn(): Response => Response::ok([
+    $router->get('/hello/:name', [], fn (): Response => Response::ok([
         'greeting' => 'Hello, ' . Request::param('name'),
     ]));
 

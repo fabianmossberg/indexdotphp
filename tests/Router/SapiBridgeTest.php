@@ -35,7 +35,7 @@ it('Router::dispatch() with no args reads from $_SERVER and friends', function (
     $_SERVER['REQUEST_URI']    = '/echo';
 
     $router = new Router();
-    $router->get('/echo', [], fn(): Response => Response::ok(['method' => Request::method()]));
+    $router->get('/echo', [], fn (): Response => Response::ok(['method' => Request::method()]));
 
     $response = $router->dispatch();
 
@@ -59,7 +59,7 @@ it('Router::dispatch()->send() chains end-to-end through the SAPI bridge', funct
     $_SERVER['REQUEST_URI']    = '/api';
 
     $router = new Router();
-    $router->get('/api', [], fn(): Response => Response::ok(['ok' => true]));
+    $router->get('/api', [], fn (): Response => Response::ok(['ok' => true]));
 
     ob_start();
     $router->dispatch()->send();

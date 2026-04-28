@@ -9,11 +9,11 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('lets static segments beat dynamic ones even when registered after', function () {
     $router = new Router();
-    $router->get('/users/:id', [], fn(): Response => Response::ok([
+    $router->get('/users/:id', [], fn (): Response => Response::ok([
         'route' => 'show',
         'id'    => Request::param('id'),
     ]));
-    $router->get('/users/me', [], fn(): Response => Response::ok([
+    $router->get('/users/me', [], fn (): Response => Response::ok([
         'route' => 'me',
     ]));
 
@@ -25,11 +25,11 @@ it('lets static segments beat dynamic ones even when registered after', function
 
 it('still matches the dynamic segment when the static does not', function () {
     $router = new Router();
-    $router->get('/users/:id', [], fn(): Response => Response::ok([
+    $router->get('/users/:id', [], fn (): Response => Response::ok([
         'route' => 'show',
         'id'    => Request::param('id'),
     ]));
-    $router->get('/users/me', [], fn(): Response => Response::ok([
+    $router->get('/users/me', [], fn (): Response => Response::ok([
         'route' => 'me',
     ]));
 

@@ -23,7 +23,8 @@
         "php": "^8.1"
     },
     "require-dev": {
-        "pestphp/pest": "^4.6"
+        "pestphp/pest": "^4.6",
+        "friendsofphp/php-cs-fixer": "^3.95"
     },
     "suggest": {
         "ext-pcov": "Code coverage driver for composer test:cov. Install via 'pecl install pcov'.",
@@ -36,6 +37,8 @@
     },
      "scripts": {
         "test": "./vendor/bin/pest",
-        "test:cov": "./vendor/bin/pest --coverage --min=80"
+        "test:cov": "./vendor/bin/pest --coverage --min=80",
+        "lint": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "format": "./vendor/bin/php-cs-fixer fix"
      }
 }

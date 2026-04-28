@@ -9,7 +9,7 @@ use IndexDotPhp\Router\ServerRequest;
 
 it('parses a comma-separated query value via queryCsv', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'tags' => Request::queryCsv('tags'),
     ]));
 
@@ -24,9 +24,9 @@ it('parses a comma-separated query value via queryCsv', function () {
 
 it('returns the defaults when queryCsv key is missing or empty', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'missing' => Request::queryCsv('missing', ['fallback']),
-        'empty'   => Request::queryCsv('empty',   ['fallback']),
+        'empty'   => Request::queryCsv('empty', ['fallback']),
     ]));
 
     $response = $router->dispatch(new ServerRequest(
@@ -40,7 +40,7 @@ it('returns the defaults when queryCsv key is missing or empty', function () {
 
 it('coerces integers via queryCsvInts and returns defaults on any non-digit', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
+    $router->get('/x', [], fn (): Response => Response::ok([
         'ok'    => Request::queryCsvInts('ok'),
         'mixed' => Request::queryCsvInts('mixed', [99]),
     ]));
@@ -56,8 +56,8 @@ it('coerces integers via queryCsvInts and returns defaults on any non-digit', fu
 
 it('filters queryCsvInts via the allowed list and falls back when any value is outside it', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
-        'ok'  => Request::queryCsvInts('ok',  [], [1, 2, 3]),
+    $router->get('/x', [], fn (): Response => Response::ok([
+        'ok'  => Request::queryCsvInts('ok', [], [1, 2, 3]),
         'bad' => Request::queryCsvInts('bad', [99], [1, 2, 3]),
     ]));
 
@@ -72,8 +72,8 @@ it('filters queryCsvInts via the allowed list and falls back when any value is o
 
 it('filters queryCsvStrings via the allowed list', function () {
     $router = new Router();
-    $router->get('/x', [], fn(): Response => Response::ok([
-        'ok'  => Request::queryCsvStrings('ok',  [], ['asc', 'desc']),
+    $router->get('/x', [], fn (): Response => Response::ok([
+        'ok'  => Request::queryCsvStrings('ok', [], ['asc', 'desc']),
         'bad' => Request::queryCsvStrings('bad', ['asc'], ['asc', 'desc']),
     ]));
 
