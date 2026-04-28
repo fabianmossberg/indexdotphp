@@ -1,5 +1,9 @@
 # IndexDotPhp
 
+[![tests](https://github.com/fabianmossberg/indexdotphp/actions/workflows/tests.yml/badge.svg)](https://github.com/fabianmossberg/indexdotphp/actions/workflows/tests.yml)
+[![PHP](https://img.shields.io/badge/php-%5E8.1-blue.svg)](https://www.php.net/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
+
 A tiny PHP toolkit for small APIs and websites. The first part — and currently
 the only part — is an HTTP router with matching, middleware, sub-routers,
 named decoders, pagination, and standardized JSON responses. Future plans
