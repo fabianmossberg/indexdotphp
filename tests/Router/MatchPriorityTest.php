@@ -2,47 +2,39 @@
 
 declare(strict_types=1);
 
-namespace IndexDotPhp\Tests\Router;
-
 use IndexDotPhp\Router\Request;
 use IndexDotPhp\Router\Response;
 use IndexDotPhp\Router\Router;
 use IndexDotPhp\Router\ServerRequest;
-use PHPUnit\Framework\TestCase;
 
-final class MatchPriorityTest extends TestCase
-{
-    public function testStaticSegmentBeatsDynamicEvenWhenRegisteredAfter(): void
-    {
-        $router = new Router();
-        $router->get('/users/:id', [], fn(): Response => Response::ok([
-            'route' => 'show',
-            'id'    => Request::param('id'),
-        ]));
-        $router->get('/users/me', [], fn(): Response => Response::ok([
-            'route' => 'me',
-        ]));
+it('lets static segments beat dynamic ones even when registered after', function () {
+    $router = new Router();
+    $router->get('/users/:id', [], fn(): Response => Response::ok([
+        'route' => 'show',
+        'id'    => Request::param('id'),
+    ]));
+    $router->get('/users/me', [], fn(): Response => Response::ok([
+        'route' => 'me',
+    ]));
 
-        $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/me'));
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/me'));
 
-        self::assertSame(200, $response->status());
-        self::assertSame('{"items":{"route":"me"}}', $response->body());
-    }
+    expect($response->status())->toBe(200);
+    expect($response->body())->toBe('{"items":{"route":"me"}}');
+});
 
-    public function testDynamicSegmentStillMatchesWhenStaticDoesNot(): void
-    {
-        $router = new Router();
-        $router->get('/users/:id', [], fn(): Response => Response::ok([
-            'route' => 'show',
-            'id'    => Request::param('id'),
-        ]));
-        $router->get('/users/me', [], fn(): Response => Response::ok([
-            'route' => 'me',
-        ]));
+it('still matches the dynamic segment when the static does not', function () {
+    $router = new Router();
+    $router->get('/users/:id', [], fn(): Response => Response::ok([
+        'route' => 'show',
+        'id'    => Request::param('id'),
+    ]));
+    $router->get('/users/me', [], fn(): Response => Response::ok([
+        'route' => 'me',
+    ]));
 
-        $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
 
-        self::assertSame(200, $response->status());
-        self::assertSame('{"items":{"route":"show","id":"42"}}', $response->body());
-    }
-}
+    expect($response->status())->toBe(200);
+    expect($response->body())->toBe('{"items":{"route":"show","id":"42"}}');
+});
