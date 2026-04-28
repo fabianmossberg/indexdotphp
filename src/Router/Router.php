@@ -31,6 +31,9 @@ final class Router
     /** @var array{default_size: int, max_size: int, page_key: string, size_key: string} */
     private array $paginationConfig;
 
+    /** @var array<string, string> */
+    private array $namedRoutes = [];
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
@@ -104,7 +107,36 @@ final class Router
         $root = $this->root();
         $root->routes[] = $compiled;
         $root->sorted = false;
+        if ($compiled['name'] !== null) {
+            $root->namedRoutes[$compiled['name']] = $compiled['pattern'];
+        }
         return $this;
+    }
+
+    /**
+     * Generate a URL for a named route, substituting the given params into the
+     * pattern (regex constraints stripped).
+     *
+     * @param array<string, string|int> $params
+     */
+    public function url(string $name, array $params = []): string
+    {
+        $pattern = $this->root()->namedRoutes[$name] ?? null;
+        if ($pattern === null) {
+            throw new \RuntimeException("No route named: {$name}");
+        }
+
+        return preg_replace_callback(
+            '#:([a-zA-Z_][a-zA-Z0-9_]*)(?:<[^>]+>)?#',
+            function (array $m) use ($params, $name): string {
+                $key = $m[1];
+                if (!array_key_exists($key, $params)) {
+                    throw new \RuntimeException("Missing param '{$key}' for route '{$name}'");
+                }
+                return rawurlencode((string) $params[$key]);
+            },
+            $pattern,
+        );
     }
 
     public function get(string $pattern, array $options, callable $handler): self
@@ -319,6 +351,7 @@ final class Router
             'decode'         => $options['decode'] ?? [],
             'decode_failure' => $options['decode_failure'] ?? 404,
             'pagination'     => $options['pagination'] ?? false,
+            'name'           => $options['name'] ?? null,
             'handler'        => $handler,
         ];
     }
