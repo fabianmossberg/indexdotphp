@@ -22,6 +22,8 @@ final class Response
 
     private ?int $total = null;
 
+    private bool $stripBody = false;
+
     private function __construct(
         private int $status,
         private mixed $items,
@@ -114,6 +116,13 @@ final class Response
         return $this->withContentType($contentType);
     }
 
+    /** Strip the body from this response while keeping status/headers (for HEAD). */
+    public function withoutBody(): self
+    {
+        $this->stripBody = true;
+        return $this;
+    }
+
     /** @param array<string, mixed> $options */
     public function withCookie(string $name, string $value, array $options = []): self
     {
@@ -150,6 +159,10 @@ final class Response
 
     public function body(): string
     {
+        if ($this->stripBody) {
+            return '';
+        }
+
         if ($this->rawBody !== null) {
             return $this->rawBody;
         }

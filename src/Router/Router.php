@@ -155,8 +155,11 @@ final class Router
 
             $path = rtrim($req->path, '/') ?: '/';
 
-            $pathMatched = false;
-            $allowedMethods = [];
+            $pathMatched     = false;
+            $allowedMethods  = [];
+            $matchedRoute    = null;
+            $matchedMatches  = null;
+            $stripBody       = false;
 
             foreach ($this->routes as $route) {
                 if (!preg_match($route['regex'], $path, $matches)) {
@@ -164,69 +167,42 @@ final class Router
                 }
                 $pathMatched = true;
 
-                if (!in_array($req->method, $route['methods'], true)) {
-                    foreach ($route['methods'] as $m) {
-                        $allowedMethods[$m] = true;
-                    }
-                    continue;
+                if (in_array($req->method, $route['methods'], true)) {
+                    $matchedRoute   = $route;
+                    $matchedMatches = $matches;
+                    $stripBody      = false;
+                    break;
                 }
 
-                $params = [];
-                foreach ($route['paramNames'] as $name) {
-                    $value = $matches[$name];
-                    if (isset($route['decode'][$name])) {
-                        $decoderName = $route['decode'][$name];
-                        $decoder = $this->decoders[$decoderName]
-                            ?? throw new \LogicException("Unknown decoder: {$decoderName}");
-                        $value = $decoder($value);
-                        if ($value === null) {
-                            $status = $route['decode_failure'];
-                            $handler = $this->errorHandlers[$status]
-                                ?? fn(): Response => Response::error($status, 'decode_failed');
-                            return $handler($req);
-                        }
-                    }
-                    $params[$name] = $value;
+                foreach ($route['methods'] as $m) {
+                    $allowedMethods[$m] = true;
                 }
 
-                $bound = $req->withParams($params);
-
-                $page = 1;
-                $size = $this->paginationConfig['default_size'];
-                if ($route['pagination']) {
-                    $size = min(
-                        $bound->queryInt($this->paginationConfig['size_key'], $this->paginationConfig['default_size']),
-                        $this->paginationConfig['max_size'],
-                    );
-                    $page = max(1, $bound->queryInt($this->paginationConfig['page_key'], 1));
-                    $bound->setAttr('_page', $page);
-                    $bound->setAttr('_size', $size);
+                if ($matchedRoute === null && $req->method === 'HEAD' && in_array('GET', $route['methods'], true)) {
+                    $matchedRoute   = $route;
+                    $matchedMatches = $matches;
+                    $stripBody      = true;
                 }
+            }
 
-                Request::bind($bound);
-
-                $inherited = $this->collectMiddleware($route['router']);
-                $pipeline = $this->buildPipeline(
-                    $route['handler'],
-                    [...$inherited, ...$route['middleware']],
-                );
-                $response = $pipeline($bound);
-
-                if ($route['pagination'] && $response->total() !== null) {
-                    $total = $response->total();
-                    $pages = $total > 0 && $size > 0 ? (int) ceil($total / $size) : 0;
-                    $response->withMeta([
-                        'total' => $total,
-                        'page'  => $page,
-                        'size'  => $size,
-                        'pages' => $pages,
-                    ]);
-                }
-
-                return $response;
+            if ($matchedRoute !== null) {
+                return $this->executeMatched($matchedRoute, $matchedMatches, $req, $stripBody);
             }
 
             if ($pathMatched) {
+                if ($req->method === 'OPTIONS') {
+                    $allowed = array_keys($allowedMethods);
+                    if (in_array('GET', $allowed, true)) {
+                        $allowed[] = 'HEAD';
+                    }
+                    $allowed[] = 'OPTIONS';
+                    $allowed = array_values(array_unique($allowed));
+                    sort($allowed);
+                    return Response::make()
+                        ->withStatus(204)
+                        ->withHeader('Allow', implode(', ', $allowed));
+                }
+
                 $req->setAttr('allowed_methods', implode(', ', array_keys($allowedMethods)));
                 return ($this->errorHandlers[405])($req);
             }
@@ -238,6 +214,71 @@ final class Router
             }
             return ($this->exceptionHandler)($e);
         }
+    }
+
+    /**
+     * @param array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, handler: callable, router: Router} $route
+     * @param array<string|int, string>                                                                                                                                                                                            $matches
+     */
+    private function executeMatched(array $route, array $matches, ServerRequest $req, bool $stripBody): Response
+    {
+        $params = [];
+        foreach ($route['paramNames'] as $name) {
+            $value = $matches[$name];
+            if (isset($route['decode'][$name])) {
+                $decoderName = $route['decode'][$name];
+                $decoder = $this->decoders[$decoderName]
+                    ?? throw new \LogicException("Unknown decoder: {$decoderName}");
+                $value = $decoder($value);
+                if ($value === null) {
+                    $status = $route['decode_failure'];
+                    $handler = $this->errorHandlers[$status]
+                        ?? fn(): Response => Response::error($status, 'decode_failed');
+                    return $handler($req);
+                }
+            }
+            $params[$name] = $value;
+        }
+
+        $bound = $req->withParams($params);
+
+        $page = 1;
+        $size = $this->paginationConfig['default_size'];
+        if ($route['pagination']) {
+            $size = min(
+                $bound->queryInt($this->paginationConfig['size_key'], $this->paginationConfig['default_size']),
+                $this->paginationConfig['max_size'],
+            );
+            $page = max(1, $bound->queryInt($this->paginationConfig['page_key'], 1));
+            $bound->setAttr('_page', $page);
+            $bound->setAttr('_size', $size);
+        }
+
+        Request::bind($bound);
+
+        $inherited = $this->collectMiddleware($route['router']);
+        $pipeline = $this->buildPipeline(
+            $route['handler'],
+            [...$inherited, ...$route['middleware']],
+        );
+        $response = $pipeline($bound);
+
+        if ($route['pagination'] && $response->total() !== null) {
+            $total = $response->total();
+            $pages = $total > 0 && $size > 0 ? (int) ceil($total / $size) : 0;
+            $response->withMeta([
+                'total' => $total,
+                'page'  => $page,
+                'size'  => $size,
+                'pages' => $pages,
+            ]);
+        }
+
+        if ($stripBody) {
+            $response->withoutBody();
+        }
+
+        return $response;
     }
 
     /**
