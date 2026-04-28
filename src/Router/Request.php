@@ -35,6 +35,52 @@ final class Request
         self::current()->setAttr($name, $value);
     }
 
+    public static function query(string $name, ?string $default = null): ?string
+    {
+        return self::current()->query($name, $default);
+    }
+
+    public static function queryInt(string $name, ?int $default = null): ?int
+    {
+        return self::current()->queryInt($name, $default);
+    }
+
+    public static function queryBool(string $name, bool $default = false): bool
+    {
+        return self::current()->queryBool($name, $default);
+    }
+
+    public static function body(): string
+    {
+        return self::current()->body();
+    }
+
+    public static function bodyJson(bool $assoc = true): mixed
+    {
+        return self::current()->bodyJson($assoc);
+    }
+
+    public static function header(string $name): ?string
+    {
+        return self::current()->header($name);
+    }
+
+    /** @return array<string, string> */
+    public static function headers(): array
+    {
+        return self::current()->headers();
+    }
+
+    public static function method(): string
+    {
+        return self::current()->method;
+    }
+
+    public static function path(): string
+    {
+        return self::current()->path;
+    }
+
     private static function current(): ServerRequest
     {
         if (self::$bound === null) {

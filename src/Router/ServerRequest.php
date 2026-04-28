@@ -12,10 +12,28 @@ final class ServerRequest
     /** @var array<string, mixed> */
     private array $attrs = [];
 
+    /** @var array<string, string> */
+    private readonly array $query;
+
+    /** @var array<string, string> */
+    private readonly array $headers;
+
+    private readonly string $rawBody;
+
+    /**
+     * @param array<string, string> $query
+     * @param array<string, string> $headers
+     */
     public function __construct(
         public readonly string $method,
         public readonly string $path,
+        array $query = [],
+        array $headers = [],
+        string $body = '',
     ) {
+        $this->query = $query;
+        $this->headers = array_change_key_case($headers, CASE_LOWER);
+        $this->rawBody = $body;
     }
 
     public function param(string $name, mixed $default = null): mixed
@@ -37,6 +55,53 @@ final class ServerRequest
     public function setAttr(string $name, mixed $value): void
     {
         $this->attrs[$name] = $value;
+    }
+
+    public function query(string $name, ?string $default = null): ?string
+    {
+        return $this->query[$name] ?? $default;
+    }
+
+    public function queryInt(string $name, ?int $default = null): ?int
+    {
+        $v = $this->query[$name] ?? null;
+        if ($v === null || !ctype_digit($v)) {
+            return $default;
+        }
+        return (int) $v;
+    }
+
+    public function queryBool(string $name, bool $default = false): bool
+    {
+        $v = $this->query[$name] ?? null;
+        if ($v === null) {
+            return $default;
+        }
+        return in_array(strtolower($v), ['true', '1', 'on', 'yes'], true);
+    }
+
+    public function body(): string
+    {
+        return $this->rawBody;
+    }
+
+    public function bodyJson(bool $assoc = true): mixed
+    {
+        if ($this->rawBody === '') {
+            return null;
+        }
+        return json_decode($this->rawBody, $assoc);
+    }
+
+    public function header(string $name): ?string
+    {
+        return $this->headers[strtolower($name)] ?? null;
+    }
+
+    /** @return array<string, string> */
+    public function headers(): array
+    {
+        return $this->headers;
     }
 
     /** @internal Router populates path params after a successful match. */
