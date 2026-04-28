@@ -25,12 +25,37 @@ final class Router
     /** @var list<callable> */
     private array $middleware = [];
 
+    /** @var array<string, callable> */
+    private array $decoders;
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
             404 => fn(): Response => Response::error(404, 'route_not_found'),
             405 => fn(): Response => Response::error(405, 'method_not_allowed'),
         ];
+
+        $this->decoders = [
+            'int'        => fn(string $s): ?int => ctype_digit($s) ? (int) $s : null,
+            'string'     => fn(string $s): string => $s,
+            'slug'       => fn(string $s): ?string => preg_match('/^[a-z0-9-]+$/', $s) ? $s : null,
+            'csv-int'    => function (string $s): ?array {
+                $parts = explode(',', $s);
+                foreach ($parts as $p) {
+                    if (!ctype_digit($p)) {
+                        return null;
+                    }
+                }
+                return array_map('intval', $parts);
+            },
+            'csv-string' => fn(string $s): array => explode(',', $s),
+        ];
+    }
+
+    public function registerDecoder(string $name, callable $decoder): self
+    {
+        $this->root()->decoders[$name] = $decoder;
+        return $this;
     }
 
     public function prefix(string $segment): self
@@ -140,7 +165,20 @@ final class Router
 
                 $params = [];
                 foreach ($route['paramNames'] as $name) {
-                    $params[$name] = $matches[$name];
+                    $value = $matches[$name];
+                    if (isset($route['decode'][$name])) {
+                        $decoderName = $route['decode'][$name];
+                        $decoder = $this->decoders[$decoderName]
+                            ?? throw new \LogicException("Unknown decoder: {$decoderName}");
+                        $value = $decoder($value);
+                        if ($value === null) {
+                            $status = $route['decode_failure'];
+                            $handler = $this->errorHandlers[$status]
+                                ?? fn(): Response => Response::error($status, 'decode_failed');
+                            return $handler($req);
+                        }
+                    }
+                    $params[$name] = $value;
                 }
 
                 $bound = $req->withParams($params);
@@ -197,13 +235,15 @@ final class Router
         }
 
         return [
-            'methods'     => $methods,
-            'pattern'     => $pattern,
-            'regex'       => '#\A' . $regex . '\z#u',
-            'paramNames'  => $paramNames,
-            'specificity' => $specificity,
-            'middleware'  => $options['middleware'] ?? [],
-            'handler'     => $handler,
+            'methods'        => $methods,
+            'pattern'        => $pattern,
+            'regex'          => '#\A' . $regex . '\z#u',
+            'paramNames'     => $paramNames,
+            'specificity'    => $specificity,
+            'middleware'     => $options['middleware'] ?? [],
+            'decode'         => $options['decode'] ?? [],
+            'decode_failure' => $options['decode_failure'] ?? 404,
+            'handler'        => $handler,
         ];
     }
 
