@@ -15,7 +15,7 @@ it('adds a Server-Timing header to the response without breaking dispatch', func
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"ok":true}}');
+    expect($response->body())->toBe('{"data":{"ok":true}}');
     expect($response->header('Server-Timing'))->toMatch('/^total;dur=\d+(\.\d+)?$/');
 });
 
@@ -59,7 +59,7 @@ it('returns the closure result from Timing::measure()', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"value":42}}');
+    expect($response->body())->toBe('{"data":{"value":42}}');
 });
 
 it('accumulates time when the same name is measured multiple times', function () {

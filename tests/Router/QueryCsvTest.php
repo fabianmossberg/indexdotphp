@@ -19,7 +19,7 @@ it('parses a comma-separated query value via queryCsv', function () {
         query:  ['tags' => 'a,b,c'],
     ));
 
-    expect($response->body())->toBe('{"items":{"tags":["a","b","c"]}}');
+    expect($response->body())->toBe('{"data":{"tags":["a","b","c"]}}');
 });
 
 it('returns the defaults when queryCsv key is missing or empty', function () {
@@ -35,7 +35,7 @@ it('returns the defaults when queryCsv key is missing or empty', function () {
         query:  ['empty' => ''],
     ));
 
-    expect($response->body())->toBe('{"items":{"missing":["fallback"],"empty":["fallback"]}}');
+    expect($response->body())->toBe('{"data":{"missing":["fallback"],"empty":["fallback"]}}');
 });
 
 it('coerces integers via queryCsvInts and returns defaults on any non-digit', function () {
@@ -51,7 +51,7 @@ it('coerces integers via queryCsvInts and returns defaults on any non-digit', fu
         query:  ['ok' => '1,2,3', 'mixed' => '1,abc,3'],
     ));
 
-    expect($response->body())->toBe('{"items":{"ok":[1,2,3],"mixed":[99]}}');
+    expect($response->body())->toBe('{"data":{"ok":[1,2,3],"mixed":[99]}}');
 });
 
 it('filters queryCsvInts via the allowed list and falls back when any value is outside it', function () {
@@ -67,7 +67,7 @@ it('filters queryCsvInts via the allowed list and falls back when any value is o
         query:  ['ok' => '1,2', 'bad' => '1,4'],
     ));
 
-    expect($response->body())->toBe('{"items":{"ok":[1,2],"bad":[99]}}');
+    expect($response->body())->toBe('{"data":{"ok":[1,2],"bad":[99]}}');
 });
 
 it('filters queryCsvStrings via the allowed list', function () {
@@ -83,5 +83,5 @@ it('filters queryCsvStrings via the allowed list', function () {
         query:  ['ok' => 'asc,desc', 'bad' => 'sideways'],
     ));
 
-    expect($response->body())->toBe('{"items":{"ok":["asc","desc"],"bad":["asc"]}}');
+    expect($response->body())->toBe('{"data":{"ok":["asc","desc"],"bad":["asc"]}}');
 });

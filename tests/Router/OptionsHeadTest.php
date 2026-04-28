@@ -52,7 +52,7 @@ it('lets an explicit HEAD route win over the auto-HEAD handler', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'HEAD', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"from":"HEAD-explicit"}}');
+    expect($response->body())->toBe('{"data":{"from":"HEAD-explicit"}}');
 });
 
 it('lets an explicit OPTIONS route win over the auto-OPTIONS handler', function () {
@@ -63,5 +63,5 @@ it('lets an explicit OPTIONS route win over the auto-OPTIONS handler', function 
     $response = $router->dispatch(new ServerRequest(method: 'OPTIONS', path: '/x'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"from":"OPTIONS-explicit"}}');
+    expect($response->body())->toBe('{"data":{"from":"OPTIONS-explicit"}}');
 });

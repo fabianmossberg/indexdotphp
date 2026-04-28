@@ -13,7 +13,7 @@ it('registers each HTTP verb method', function (string $method, string $fn) {
     $response = $router->dispatch(new ServerRequest(method: $method, path: '/x'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"m":"' . $method . '"}}');
+    expect($response->body())->toBe('{"data":{"m":"' . $method . '"}}');
 })->with([
     'GET'    => ['GET',    'get'],
     'POST'   => ['POST',   'post'],

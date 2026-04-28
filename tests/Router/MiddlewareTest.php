@@ -17,7 +17,7 @@ it('runs a single global middleware before the handler', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"attr":"ran"}}');
+    expect($response->body())->toBe('{"data":{"attr":"ran"}}');
 });
 
 it('runs multiple global middlewares in registration order', function () {
@@ -34,7 +34,7 @@ it('runs multiple global middlewares in registration order', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"trail":"AB"}}');
+    expect($response->body())->toBe('{"data":{"trail":"AB"}}');
 });
 
 it('lets middleware short-circuit by not calling next', function () {
@@ -47,7 +47,7 @@ it('lets middleware short-circuit by not calling next', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
     expect($response->status())->toBe(401);
-    expect($response->body())->toBe('{"items":null,"message":["denied"]}');
+    expect($response->body())->toBe('{"data":null,"message":["denied"]}');
 });
 
 it('runs per-route middleware after global middleware', function () {
@@ -67,7 +67,7 @@ it('runs per-route middleware after global middleware', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"trail":"global,route,handler"}}');
+    expect($response->body())->toBe('{"data":{"trail":"global,route,handler"}}');
 });
 
 it('lets middleware see and replace the response on the way out', function () {
@@ -80,5 +80,5 @@ it('lets middleware see and replace the response on the way out', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"wrapped":true,"inner_status":200}}');
+    expect($response->body())->toBe('{"data":{"wrapped":true,"inner_status":200}}');
 });

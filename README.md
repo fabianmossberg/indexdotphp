@@ -68,7 +68,7 @@ php -S localhost:8000 -t public public/index.php
 `GET http://localhost:8000/hello/world` returns:
 
 ```json
-{ "items": { "greeting": "Hello, world" } }
+{ "data": { "greeting": "Hello, world" } }
 ```
 
 ## Features
@@ -79,7 +79,7 @@ php -S localhost:8000 -t public public/index.php
 - **Middleware**: global (`$router->use(...)`), per-route (`'middleware' => [...]`), and sub-router scoped — onion model
 - **Sub-routers**: `$api = $router->prefix('/api/v1')` — nested prefixes accumulate, middleware is scoped to the subtree
 - **Decoders**: `'decode' => ['id' => 'int']` route option; built-ins for `int`, `string`, `slug`, `csv-int`, `csv-string`; register custom via `Router::registerDecoder`
-- **Pagination**: `'pagination' => true` route option, `Response::list($items, $total)`, automatic `meta` envelope
+- **Pagination**: `'pagination' => true` route option, `Response::list($data, $total)`, automatic `meta` envelope
 - **Cookies**: `Request::cookie()`, `Response::withCookie($name, $value, $options)`
 - **Errors**: `Router::onError($status, callable)` for 404 / 405 / decode failures, `Router::onException(callable)` for top-level catch
 - **Built-in middleware**: `IndexDotPhp\Router\Middleware\Timing` (Server-Timing header)
@@ -128,17 +128,26 @@ Every JSON response uses the same shape:
 
 ```json
 {
-  "items":   <value>,
+  "data":    <value>,
   "meta":    { "total": 84, "page": 1, "size": 20, "pages": 5 },
   "message": ["debug: cache hit"]
 }
 ```
 
-`items` is always present. `meta` only appears for paginated routes (or when set
+`data` is always present. `meta` only appears for paginated routes (or when set
 explicitly via `withMeta`). `message` only appears when at least one message was
 appended via `Response::ok($x, 'msg')`, `Response::error(...)`, or
-`->withMessage('msg')`. For non-JSON output (CSV, HTML, files), use
-`Response::make()->withRaw($body, $contentType)` to bypass the envelope.
+`->withMessage('msg')`.
+
+If you want a different shape (custom keys at the root, or non-JSON output like
+CSV / HTML / files), use the raw factory or fluent escape hatch:
+
+```php
+Response::raw('{"users":[],"count":0}', 'application/json');
+Response::make()->withStatus(201)->withRaw($csv, 'text/csv');
+```
+
+Raw responses bypass the envelope entirely — `meta` and `message` are not added.
 
 ## Running the tests
 

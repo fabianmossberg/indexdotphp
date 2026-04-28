@@ -28,11 +28,11 @@ it('builds a permanent redirect (301) when the status arg is given', function ()
 it('lets Response::make() be customised via fluent setters', function () {
     $response = Response::make()
         ->withStatus(201)
-        ->withItems(['id' => 7])
+        ->withData(['id' => 7])
         ->withMessage('created');
 
     expect($response->status())->toBe(201);
-    expect($response->body())->toBe('{"items":{"id":7},"message":["created"]}');
+    expect($response->body())->toBe('{"data":{"id":7},"message":["created"]}');
 });
 
 it('appends multiple messages via withMessage()', function () {
@@ -40,15 +40,15 @@ it('appends multiple messages via withMessage()', function () {
         ->withMessage('first')
         ->withMessage('second');
 
-    expect($response->body())->toBe('{"items":{"x":1},"message":["first","second"]}');
+    expect($response->body())->toBe('{"data":{"x":1},"message":["first","second"]}');
 });
 
 it('renders meta into the envelope when withMeta() is used', function () {
     $response = Response::make()
-        ->withItems([])
+        ->withData([])
         ->withMeta(['total' => 84, 'page' => 1, 'size' => 20, 'pages' => 5]);
 
-    expect($response->body())->toBe('{"items":[],"meta":{"total":84,"page":1,"size":20,"pages":5}}');
+    expect($response->body())->toBe('{"data":[],"meta":{"total":84,"page":1,"size":20,"pages":5}}');
 });
 
 it('sets and reads custom headers via withHeader() and header()', function () {
@@ -72,4 +72,19 @@ it('bypasses the JSON envelope entirely with withRaw()', function () {
 
     expect($response->body())->toBe("col1,col2\nval1,val2\n");
     expect($response->header('Content-Type'))->toBe('text/csv');
+});
+
+it('builds a raw response via Response::raw() with a custom content type', function () {
+    $response = Response::raw('{"users":[],"count":0}', 'application/json');
+
+    expect($response->status())->toBe(200);
+    expect($response->body())->toBe('{"users":[],"count":0}');
+    expect($response->header('Content-Type'))->toBe('application/json');
+});
+
+it('defaults Response::raw() content type to text/plain', function () {
+    $response = Response::raw('hello');
+
+    expect($response->body())->toBe('hello');
+    expect($response->header('Content-Type'))->toBe('text/plain');
 });

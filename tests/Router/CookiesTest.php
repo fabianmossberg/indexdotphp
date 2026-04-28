@@ -20,7 +20,7 @@ it('reads a cookie via Request::cookie() and falls back to null', function () {
         cookies: ['session' => 'abc123'],
     ));
 
-    expect($response->body())->toBe('{"items":{"session":"abc123","missing":null}}');
+    expect($response->body())->toBe('{"data":{"session":"abc123","missing":null}}');
 });
 
 it('sets a cookie via Response::withCookie() with default options', function () {

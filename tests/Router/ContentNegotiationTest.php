@@ -20,7 +20,7 @@ it('accepts() returns true for an exact match in the Accept header', function ()
         headers: ['Accept' => 'text/csv, application/json'],
     ));
 
-    expect($response->body())->toBe('{"items":{"csv":true,"json":true}}');
+    expect($response->body())->toBe('{"data":{"csv":true,"json":true}}');
 });
 
 it('accepts() honours type/* and */* wildcards', function () {
@@ -37,7 +37,7 @@ it('accepts() honours type/* and */* wildcards', function () {
         headers: ['Accept' => 'text/*, */*;q=0.5'],
     ));
 
-    expect($response->body())->toBe('{"items":{"html":true,"plain":true,"json":true}}');
+    expect($response->body())->toBe('{"data":{"html":true,"plain":true,"json":true}}');
 });
 
 it('accepts() returns false when the most-specific match has q=0', function () {
@@ -52,7 +52,7 @@ it('accepts() returns false when the most-specific match has q=0', function () {
         headers: ['Accept' => 'text/html;q=0, text/*;q=1'],
     ));
 
-    expect($response->body())->toBe('{"items":{"html":false}}');
+    expect($response->body())->toBe('{"data":{"html":false}}');
 });
 
 it('accepts() returns true when no Accept header is present', function () {
@@ -63,7 +63,7 @@ it('accepts() returns true when no Accept header is present', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
-    expect($response->body())->toBe('{"items":{"json":true}}');
+    expect($response->body())->toBe('{"data":{"json":true}}');
 });
 
 it('preferredContentType() picks the highest-q supported type', function () {
@@ -78,7 +78,7 @@ it('preferredContentType() picks the highest-q supported type', function () {
         headers: ['Accept' => 'text/csv;q=0.5, application/json;q=0.9'],
     ));
 
-    expect($response->body())->toBe('{"items":{"pick":"application/json"}}');
+    expect($response->body())->toBe('{"data":{"pick":"application/json"}}');
 });
 
 it('preferredContentType() returns null when nothing supported is acceptable', function () {
@@ -93,5 +93,5 @@ it('preferredContentType() returns null when nothing supported is acceptable', f
         headers: ['Accept' => 'text/html, application/json'],
     ));
 
-    expect($response->body())->toBe('{"items":{"pick":null}}');
+    expect($response->body())->toBe('{"data":{"pick":null}}');
 });

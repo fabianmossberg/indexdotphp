@@ -16,7 +16,7 @@ it('matches a constrained dynamic segment when the value satisfies the regex', f
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"id":"42"}}');
+    expect($response->body())->toBe('{"data":{"id":"42"}}');
 });
 
 it('does not match a constrained segment when the value violates the regex', function () {
@@ -35,7 +35,7 @@ it('ranks a constrained segment above an unconstrained one for the same path', f
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
 
-    expect($response->body())->toBe('{"items":{"route":"id"}}');
+    expect($response->body())->toBe('{"data":{"route":"id"}}');
 });
 
 it('captures across slashes when the constraint allows it (multi-segment)', function () {
@@ -47,5 +47,5 @@ it('captures across slashes when the constraint allows it (multi-segment)', func
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/files/a/b/c'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"path":"a/b/c"}}');
+    expect($response->body())->toBe('{"data":{"path":"a/b/c"}}');
 });

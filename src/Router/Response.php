@@ -26,34 +26,42 @@ final class Response
 
     private function __construct(
         private int $status,
-        private mixed $items,
+        private mixed $data,
     ) {
     }
 
-    public static function ok(mixed $items, ?string $message = null): self
+    public static function ok(mixed $data, ?string $message = null): self
     {
-        $r = new self(200, $items);
+        $r = new self(200, $data);
         if ($message !== null) {
             $r->messages[] = $message;
         }
         return $r;
     }
 
-    public static function error(int $status, string $message, mixed $items = null): self
+    public static function error(int $status, string $message, mixed $data = null): self
     {
-        $r = new self($status, $items);
+        $r = new self($status, $data);
         $r->messages[] = $message;
         return $r;
     }
 
-    /** @param array<int|string, mixed> $items */
-    public static function list(array $items, int $total, ?string $message = null): self
+    /** @param array<int|string, mixed> $data */
+    public static function list(array $data, int $total, ?string $message = null): self
     {
-        $r = new self(200, $items);
+        $r = new self(200, $data);
         $r->total = $total;
         if ($message !== null) {
             $r->messages[] = $message;
         }
+        return $r;
+    }
+
+    public static function raw(string $body, string $contentType = 'text/plain'): self
+    {
+        $r = new self(200, null);
+        $r->rawBody = $body;
+        $r->headers['Content-Type'] = $contentType;
         return $r;
     }
 
@@ -80,9 +88,9 @@ final class Response
         return $this;
     }
 
-    public function withItems(mixed $items): self
+    public function withData(mixed $data): self
     {
-        $this->items = $items;
+        $this->data = $data;
         return $this;
     }
 
@@ -171,7 +179,7 @@ final class Response
             return '';
         }
 
-        $envelope = ['items' => $this->items];
+        $envelope = ['data' => $this->data];
         if ($this->meta !== []) {
             $envelope['meta'] = $this->meta;
         }

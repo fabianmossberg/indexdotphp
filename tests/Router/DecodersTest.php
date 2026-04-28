@@ -16,7 +16,7 @@ it('runs the int decoder and coerces the matched param to a real int', function 
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
 
-    expect($response->body())->toBe('{"items":{"id":42,"type":"integer"}}');
+    expect($response->body())->toBe('{"data":{"id":42,"type":"integer"}}');
 });
 
 it('returns 404 when the int decoder rejects non-digit input', function () {
@@ -26,7 +26,7 @@ it('returns 404 when the int decoder rejects non-digit input', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/abc'));
 
     expect($response->status())->toBe(404);
-    expect($response->body())->toBe('{"items":null,"message":["route_not_found"]}');
+    expect($response->body())->toBe('{"data":null,"message":["route_not_found"]}');
 });
 
 it('uses a custom decoder registered via registerDecoder', function () {
@@ -42,7 +42,7 @@ it('uses a custom decoder registered via registerDecoder', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x/DEADBEEF'));
 
-    expect($response->body())->toBe('{"items":{"hash":"deadbeef"}}');
+    expect($response->body())->toBe('{"data":{"hash":"deadbeef"}}');
 });
 
 it('returns 400 when decode_failure is set to 400', function () {
@@ -65,7 +65,7 @@ it('built-in slug decoder accepts valid slugs and rejects others', function () {
 
     $ok = $router->dispatch(new ServerRequest(method: 'GET', path: '/posts/my-cool-post-1'));
     expect($ok->status())->toBe(200);
-    expect($ok->body())->toBe('{"items":{"slug":"my-cool-post-1"}}');
+    expect($ok->body())->toBe('{"data":{"slug":"my-cool-post-1"}}');
 
     $bad = $router->dispatch(new ServerRequest(method: 'GET', path: '/posts/UPPERCASE'));
     expect($bad->status())->toBe(404);
@@ -81,10 +81,10 @@ it('parses comma-separated lists via csv-int and csv-string', function () {
     ]));
 
     $ints = $router->dispatch(new ServerRequest(method: 'GET', path: '/ints/1,2,3'));
-    expect($ints->body())->toBe('{"items":{"ids":[1,2,3]}}');
+    expect($ints->body())->toBe('{"data":{"ids":[1,2,3]}}');
 
     $tags = $router->dispatch(new ServerRequest(method: 'GET', path: '/tags/foo,bar'));
-    expect($tags->body())->toBe('{"items":{"names":["foo","bar"]}}');
+    expect($tags->body())->toBe('{"data":{"names":["foo","bar"]}}');
 
     $bad = $router->dispatch(new ServerRequest(method: 'GET', path: '/ints/1,abc,3'));
     expect($bad->status())->toBe(404);

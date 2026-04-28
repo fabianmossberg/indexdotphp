@@ -15,7 +15,7 @@ it('prepends the prefix to routes registered on a sub-router', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/users'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"route":"users"}}');
+    expect($response->body())->toBe('{"data":{"route":"users"}}');
 });
 
 it('handles nested sub-routers with cumulative prefixes', function () {
@@ -27,7 +27,7 @@ it('handles nested sub-routers with cumulative prefixes', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/v1/users'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"nested":true}}');
+    expect($response->body())->toBe('{"data":{"nested":true}}');
 });
 
 it('runs sub-router middleware after parent and before per-route middleware', function () {
@@ -54,7 +54,7 @@ it('runs sub-router middleware after parent and before per-route middleware', fu
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/x'));
 
-    expect($response->body())->toBe('{"items":{"trail":"p,sub,route,handler"}}');
+    expect($response->body())->toBe('{"data":{"trail":"p,sub,route,handler"}}');
 });
 
 it('does not apply sub-router middleware to routes outside the sub-router', function () {
@@ -67,7 +67,7 @@ it('does not apply sub-router middleware to routes outside the sub-router', func
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/public'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"public":true}}');
+    expect($response->body())->toBe('{"data":{"public":true}}');
 });
 
 it('uses the root error handlers for unmatched paths under a sub-router prefix', function () {
@@ -78,5 +78,5 @@ it('uses the root error handlers for unmatched paths under a sub-router prefix',
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/nope'));
 
     expect($response->status())->toBe(404);
-    expect($response->body())->toBe('{"items":null,"message":["route_not_found"]}');
+    expect($response->body())->toBe('{"data":null,"message":["route_not_found"]}');
 });

@@ -13,7 +13,7 @@ it('returns the default 404 envelope when no route matches', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/nope'));
 
     expect($response->status())->toBe(404);
-    expect($response->body())->toBe('{"items":null,"message":["route_not_found"]}');
+    expect($response->body())->toBe('{"data":null,"message":["route_not_found"]}');
 });
 
 it('returns the default 405 envelope when path matches but method does not', function () {
@@ -23,7 +23,7 @@ it('returns the default 405 envelope when path matches but method does not', fun
     $response = $router->dispatch(new ServerRequest(method: 'POST', path: '/foo'));
 
     expect($response->status())->toBe(405);
-    expect($response->body())->toBe('{"items":null,"message":["method_not_allowed"]}');
+    expect($response->body())->toBe('{"data":null,"message":["method_not_allowed"]}');
 });
 
 it('lets onError(404) override the default 404 handler', function () {
@@ -33,7 +33,7 @@ it('lets onError(404) override the default 404 handler', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/nope'));
 
     expect($response->status())->toBe(404);
-    expect($response->body())->toBe('{"items":null,"message":["custom_not_found"]}');
+    expect($response->body())->toBe('{"data":null,"message":["custom_not_found"]}');
 });
 
 it('exposes allowed_methods on the request attribute bag for 405 handlers', function () {

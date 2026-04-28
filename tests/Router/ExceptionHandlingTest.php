@@ -21,7 +21,7 @@ it('routes handler exceptions through onException when one is registered', funct
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/foo'));
 
     expect($response->status())->toBe(500);
-    expect($response->body())->toBe('{"items":null,"message":["boom"]}');
+    expect($response->body())->toBe('{"data":null,"message":["boom"]}');
 });
 
 it('also catches exceptions thrown from error handlers', function () {

@@ -20,7 +20,7 @@ it('reads a query param via Request::query and falls back to the default', funct
         query:  ['q' => 'hello'],
     ));
 
-    expect($response->body())->toBe('{"items":{"value":"hello","default":"def"}}');
+    expect($response->body())->toBe('{"data":{"value":"hello","default":"def"}}');
 });
 
 it('coerces query params to int via queryInt; non-digit input returns the default', function () {
@@ -36,7 +36,7 @@ it('coerces query params to int via queryInt; non-digit input returns the defaul
         query:  ['page' => '42', 'broken' => 'abc'],
     ));
 
-    expect($response->body())->toBe('{"items":{"page":42,"broken":99}}');
+    expect($response->body())->toBe('{"data":{"page":42,"broken":99}}');
 });
 
 it('coerces query params to bool via queryBool with case-insensitive truthy values', function () {
@@ -54,7 +54,7 @@ it('coerces query params to bool via queryBool with case-insensitive truthy valu
         query:  ['a' => 'TRUE', 'b' => '1', 'c' => 'no'],
     ));
 
-    expect($response->body())->toBe('{"items":{"a":true,"b":true,"c":false,"d":true}}');
+    expect($response->body())->toBe('{"data":{"a":true,"b":true,"c":false,"d":true}}');
 });
 
 it('returns the raw request body via Request::body()', function () {
@@ -67,7 +67,7 @@ it('returns the raw request body via Request::body()', function () {
         body:   'hello world',
     ));
 
-    expect($response->body())->toBe('{"items":{"raw":"hello world"}}');
+    expect($response->body())->toBe('{"data":{"raw":"hello world"}}');
 });
 
 it('parses a JSON body to an associative array via Request::bodyJson()', function () {
@@ -80,7 +80,7 @@ it('parses a JSON body to an associative array via Request::bodyJson()', functio
         body:   '{"name":"alice","age":30}',
     ));
 
-    expect($response->body())->toBe('{"items":{"name":"alice","age":30}}');
+    expect($response->body())->toBe('{"data":{"name":"alice","age":30}}');
 });
 
 it('looks up headers case-insensitively via Request::header()', function () {
@@ -98,7 +98,7 @@ it('looks up headers case-insensitively via Request::header()', function () {
         headers: ['Content-Type' => 'application/json'],
     ));
 
-    expect($response->body())->toBe('{"items":{"lower":"application/json","mixed":"application/json","upper":"application/json","miss":null}}');
+    expect($response->body())->toBe('{"data":{"lower":"application/json","mixed":"application/json","upper":"application/json","miss":null}}');
 });
 
 it('exposes method and path via the Request facade', function () {
@@ -110,7 +110,7 @@ it('exposes method and path via the Request facade', function () {
 
     $response = $router->dispatch(new ServerRequest(method: 'PATCH', path: '/users/42'));
 
-    expect($response->body())->toBe('{"items":{"method":"PATCH","path":"/users/42"}}');
+    expect($response->body())->toBe('{"data":{"method":"PATCH","path":"/users/42"}}');
 });
 
 it('returns all headers (lowercased) via Request::headers()', function () {
@@ -123,5 +123,5 @@ it('returns all headers (lowercased) via Request::headers()', function () {
         headers: ['Content-Type' => 'application/json', 'X-Custom' => 'v'],
     ));
 
-    expect($response->body())->toBe('{"items":{"content-type":"application/json","x-custom":"v"}}');
+    expect($response->body())->toBe('{"data":{"content-type":"application/json","x-custom":"v"}}');
 });

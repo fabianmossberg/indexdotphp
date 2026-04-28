@@ -17,5 +17,5 @@ it('returns a greeting from a path param', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/hello/world'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"greeting":"Hello, world"}}');
+    expect($response->body())->toBe('{"data":{"greeting":"Hello, world"}}');
 });

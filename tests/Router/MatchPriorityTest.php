@@ -20,7 +20,7 @@ it('lets static segments beat dynamic ones even when registered after', function
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/me'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"route":"me"}}');
+    expect($response->body())->toBe('{"data":{"route":"me"}}');
 });
 
 it('still matches the dynamic segment when the static does not', function () {
@@ -36,5 +36,5 @@ it('still matches the dynamic segment when the static does not', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/42'));
 
     expect($response->status())->toBe(200);
-    expect($response->body())->toBe('{"items":{"route":"show","id":"42"}}');
+    expect($response->body())->toBe('{"data":{"route":"show","id":"42"}}');
 });

@@ -39,7 +39,7 @@ it('Router::dispatch() with no args reads from $_SERVER and friends', function (
 
     $response = $router->dispatch();
 
-    expect($response->body())->toBe('{"items":{"method":"GET"}}');
+    expect($response->body())->toBe('{"data":{"method":"GET"}}');
 
     unset($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
 });
@@ -51,7 +51,7 @@ it('Response::send() emits the body to the output buffer', function () {
     $response->send();
     $output = ob_get_clean();
 
-    expect($output)->toBe('{"items":{"hello":"world"}}');
+    expect($output)->toBe('{"data":{"hello":"world"}}');
 });
 
 it('Router::dispatch()->send() chains end-to-end through the SAPI bridge', function () {
@@ -65,7 +65,7 @@ it('Router::dispatch()->send() chains end-to-end through the SAPI bridge', funct
     $router->dispatch()->send();
     $output = ob_get_clean();
 
-    expect($output)->toBe('{"items":{"ok":true}}');
+    expect($output)->toBe('{"data":{"ok":true}}');
 
     unset($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
 });
