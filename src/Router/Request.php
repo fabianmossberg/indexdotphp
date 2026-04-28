@@ -115,6 +115,19 @@ final class Request
         return self::current()->cookie($name);
     }
 
+    public static function accepts(string $contentType): bool
+    {
+        return self::current()->accepts($contentType);
+    }
+
+    /**
+     * @param list<string> $supported
+     */
+    public static function preferredContentType(array $supported): ?string
+    {
+        return self::current()->preferredContentType($supported);
+    }
+
     public static function page(): int
     {
         return self::current()->attr('_page', 1);

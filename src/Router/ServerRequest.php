@@ -218,6 +218,96 @@ final class ServerRequest
         return $this->cookies[$name] ?? null;
     }
 
+    public function accepts(string $contentType): bool
+    {
+        $entries = $this->parseAccept();
+        if ($entries === []) {
+            return true;
+        }
+        return $this->bestMatchQuality($contentType, $entries) > 0;
+    }
+
+    /**
+     * @param list<string> $supported
+     */
+    public function preferredContentType(array $supported): ?string
+    {
+        $entries = $this->parseAccept();
+        if ($entries === []) {
+            return $supported[0] ?? null;
+        }
+
+        $best  = null;
+        $bestQ = 0.0;
+        foreach ($supported as $type) {
+            $q = $this->bestMatchQuality($type, $entries);
+            if ($q > $bestQ) {
+                $bestQ = $q;
+                $best  = $type;
+            }
+        }
+        return $best;
+    }
+
+    /** @return list<array{type: string, q: float}> */
+    private function parseAccept(): array
+    {
+        $header = $this->headers['accept'] ?? null;
+        if ($header === null || $header === '') {
+            return [];
+        }
+
+        $entries = [];
+        foreach (explode(',', $header) as $part) {
+            $part = trim($part);
+            if ($part === '') {
+                continue;
+            }
+            $segments = array_map('trim', explode(';', $part));
+            $type = $segments[0];
+            $q = 1.0;
+            for ($i = 1, $n = count($segments); $i < $n; $i++) {
+                if (str_starts_with($segments[$i], 'q=')) {
+                    $q = (float) substr($segments[$i], 2);
+                }
+            }
+            $entries[] = ['type' => $type, 'q' => $q];
+        }
+        return $entries;
+    }
+
+    /** @param list<array{type: string, q: float}> $entries */
+    private function bestMatchQuality(string $type, array $entries): float
+    {
+        $bestSpec = 0;
+        $bestQ    = 0.0;
+        foreach ($entries as $e) {
+            $spec = $this->matchSpecificity($e['type'], $type);
+            if ($spec > $bestSpec) {
+                $bestSpec = $spec;
+                $bestQ    = $e['q'];
+            }
+        }
+        return $bestQ;
+    }
+
+    private function matchSpecificity(string $pattern, string $type): int
+    {
+        if ($pattern === $type) {
+            return 3;
+        }
+        if (str_ends_with($pattern, '/*')) {
+            $prefix = substr($pattern, 0, -1);
+            if (str_starts_with($type, $prefix)) {
+                return 2;
+            }
+        }
+        if ($pattern === '*/*') {
+            return 1;
+        }
+        return 0;
+    }
+
     /** @internal Router populates path params after a successful match. */
     public function withParams(array $params): self
     {
