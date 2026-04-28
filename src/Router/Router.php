@@ -16,6 +16,9 @@ final class Router
     /** @var array<int, callable> */
     private array $errorHandlers;
 
+    /** @var callable|null */
+    private $exceptionHandler = null;
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
@@ -27,6 +30,12 @@ final class Router
     public function onError(int $status, callable $handler): self
     {
         $this->errorHandlers[$status] = $handler;
+        return $this;
+    }
+
+    public function onException(callable $handler): self
+    {
+        $this->exceptionHandler = $handler;
         return $this;
     }
 
@@ -76,48 +85,55 @@ final class Router
             throw new \LogicException('SAPI-bound dispatch is not implemented yet; pass a ServerRequest.');
         }
 
-        if (!$this->sorted) {
-            usort($this->routes, fn(array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
-            $this->sorted = true;
-        }
-
-        $path = rtrim($req->path, '/') ?: '/';
-
-        $pathMatched = false;
-        $allowedMethods = [];
-
-        foreach ($this->routes as $route) {
-            if (!preg_match($route['regex'], $path, $matches)) {
-                continue;
-            }
-            $pathMatched = true;
-
-            if (!in_array($req->method, $route['methods'], true)) {
-                foreach ($route['methods'] as $m) {
-                    $allowedMethods[$m] = true;
-                }
-                continue;
-            }
-
-            $params = [];
-            foreach ($route['paramNames'] as $name) {
-                $params[$name] = $matches[$name];
-            }
-
-            $bound = $req->withParams($params);
-            Request::bind($bound);
-
-            return ($route['handler'])($bound);
-        }
-
-        if ($pathMatched) {
-            $req->setAttr('allowed_methods', implode(', ', array_keys($allowedMethods)));
+        try {
             Request::bind($req);
-            return ($this->errorHandlers[405])($req);
-        }
 
-        Request::bind($req);
-        return ($this->errorHandlers[404])($req);
+            if (!$this->sorted) {
+                usort($this->routes, fn(array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
+                $this->sorted = true;
+            }
+
+            $path = rtrim($req->path, '/') ?: '/';
+
+            $pathMatched = false;
+            $allowedMethods = [];
+
+            foreach ($this->routes as $route) {
+                if (!preg_match($route['regex'], $path, $matches)) {
+                    continue;
+                }
+                $pathMatched = true;
+
+                if (!in_array($req->method, $route['methods'], true)) {
+                    foreach ($route['methods'] as $m) {
+                        $allowedMethods[$m] = true;
+                    }
+                    continue;
+                }
+
+                $params = [];
+                foreach ($route['paramNames'] as $name) {
+                    $params[$name] = $matches[$name];
+                }
+
+                $bound = $req->withParams($params);
+                Request::bind($bound);
+
+                return ($route['handler'])($bound);
+            }
+
+            if ($pathMatched) {
+                $req->setAttr('allowed_methods', implode(', ', array_keys($allowedMethods)));
+                return ($this->errorHandlers[405])($req);
+            }
+
+            return ($this->errorHandlers[404])($req);
+        } catch (\Throwable $e) {
+            if ($this->exceptionHandler === null) {
+                throw $e;
+            }
+            return ($this->exceptionHandler)($e);
+        }
     }
 
     /**
