@@ -18,11 +18,15 @@ final class ServerRequest
     /** @var array<string, string> */
     private readonly array $headers;
 
+    /** @var array<string, string> */
+    private readonly array $cookies;
+
     private readonly string $rawBody;
 
     /**
      * @param array<string, string> $query
      * @param array<string, string> $headers
+     * @param array<string, string> $cookies
      */
     public function __construct(
         public readonly string $method,
@@ -30,9 +34,11 @@ final class ServerRequest
         array $query = [],
         array $headers = [],
         string $body = '',
+        array $cookies = [],
     ) {
         $this->query = $query;
         $this->headers = array_change_key_case($headers, CASE_LOWER);
+        $this->cookies = $cookies;
         $this->rawBody = $body;
     }
 
@@ -102,6 +108,11 @@ final class ServerRequest
     public function headers(): array
     {
         return $this->headers;
+    }
+
+    public function cookie(string $name): ?string
+    {
+        return $this->cookies[$name] ?? null;
     }
 
     /** @internal Router populates path params after a successful match. */

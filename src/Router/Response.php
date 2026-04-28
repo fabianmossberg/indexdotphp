@@ -15,6 +15,9 @@ final class Response
     /** @var array<string, mixed> */
     private array $meta = [];
 
+    /** @var array<string, array{value: string, options: array<string, mixed>}> */
+    private array $cookies = [];
+
     private ?string $rawBody = null;
 
     private function __construct(
@@ -96,6 +99,19 @@ final class Response
     {
         $this->rawBody = $body;
         return $this->withContentType($contentType);
+    }
+
+    /** @param array<string, mixed> $options */
+    public function withCookie(string $name, string $value, array $options = []): self
+    {
+        $this->cookies[$name] = ['value' => $value, 'options' => $options];
+        return $this;
+    }
+
+    /** @return array<string, array{value: string, options: array<string, mixed>}> */
+    public function cookies(): array
+    {
+        return $this->cookies;
     }
 
     public function status(): int

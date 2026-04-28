@@ -81,6 +81,11 @@ final class Request
         return self::current()->path;
     }
 
+    public static function cookie(string $name): ?string
+    {
+        return self::current()->cookie($name);
+    }
+
     private static function current(): ServerRequest
     {
         if (self::$bound === null) {
