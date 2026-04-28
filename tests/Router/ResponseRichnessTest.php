@@ -89,6 +89,23 @@ it('defaults Response::raw() content type to text/plain', function () {
     expect($response->header('Content-Type'))->toBe('text/plain');
 });
 
+it('removes a previously set header via withoutHeader()', function () {
+    $response = Response::ok([])
+        ->withHeader('X-Foo', 'bar')
+        ->withHeader('X-Baz', 'qux')
+        ->withoutHeader('X-Foo');
+
+    expect($response->header('X-Foo'))->toBeNull();
+    expect($response->header('X-Baz'))->toBe('qux');
+});
+
+it('is a no-op when withoutHeader() is called for a header that was never set', function () {
+    $response = Response::ok([])->withoutHeader('X-Missing');
+
+    expect($response->header('X-Missing'))->toBeNull();
+    expect($response->headers())->toBe([]);
+});
+
 it('renders the error envelope when an explicit code is passed to Response::error()', function () {
     $response = Response::error(500, 'Database is on fire', code: 'DB_CONNECTION_FAILED');
 

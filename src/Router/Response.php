@@ -28,6 +28,9 @@ final class Response
 
     private ?string $errorCode = null;
 
+    /** @var list<string> */
+    private array $strippedHeaders = [];
+
     private const DEFAULT_ERROR_CODES = [
         400 => 'BAD_REQUEST',
         401 => 'UNAUTHORIZED',
@@ -141,6 +144,29 @@ final class Response
         return $this;
     }
 
+    public function withoutHeader(string $name): self
+    {
+        unset($this->headers[$name]);
+        return $this;
+    }
+
+    /**
+     * Mark headers to be stripped at send time via PHP's header_remove(), used
+     * by Router::stripHeaders() to suppress SAPI defaults like the X-Powered-By
+     * value PHP injects from php.ini's expose_php directive.
+     *
+     * @param list<string> $names
+     */
+    public function withStrippedHeaders(array $names): self
+    {
+        foreach ($names as $name) {
+            if (!in_array($name, $this->strippedHeaders, true)) {
+                $this->strippedHeaders[] = $name;
+            }
+        }
+        return $this;
+    }
+
     public function withContentType(string $type): self
     {
         return $this->withHeader('Content-Type', $type);
@@ -170,6 +196,12 @@ final class Response
     public function cookies(): array
     {
         return $this->cookies;
+    }
+
+    /** @return list<string> */
+    public function strippedHeaders(): array
+    {
+        return $this->strippedHeaders;
     }
 
     public function status(): int
@@ -231,6 +263,10 @@ final class Response
     public function send(): void
     {
         http_response_code($this->status);
+
+        foreach ($this->strippedHeaders as $name) {
+            header_remove($name);
+        }
 
         $headers = $this->headers;
         if ($this->status !== 204 && $this->rawBody === null && !isset($headers['Content-Type'])) {

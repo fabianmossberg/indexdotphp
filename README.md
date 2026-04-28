@@ -79,6 +79,7 @@ php -S localhost:8000 -t public public/index.php
 - **Decoders**: `'decode' => ['id' => 'int']` route option; built-ins for `int`, `string`, `slug`, `csv-int`, `csv-string`; register custom via `Router::registerDecoder`
 - **Pagination**: `'pagination' => true` route option, `Response::list($data, $total)`, automatic `meta` envelope
 - **Cookies**: `Request::cookie()`, `Response::withCookie($name, $value, $options)`
+- **Headers**: `Response::withHeader / withoutHeader`, `Router::defaultHeaders([...])` for static headers on every response, `Router::stripHeaders([...])` to suppress SAPI defaults like `X-Powered-By`
 - **Errors**: `Router::onError($status, callable)` for 404 / 405 / decode failures, `Router::onException(callable)` for top-level catch
 - **Built-in middleware**: `IndexDotPhp\Router\Middleware\Timing` (Server-Timing header)
 

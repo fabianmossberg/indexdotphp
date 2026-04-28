@@ -92,3 +92,45 @@ it('lets sub-routers register defaults on the root', function () {
 
     expect($response->header('X-Powered-By'))->toBe('He-Man');
 });
+
+it('attaches Router::stripHeaders() names to the dispatched response', function () {
+    $router = new Router();
+    $router->stripHeaders(['X-Powered-By', 'Server']);
+    $router->get('/x', [], fn (): Response => Response::ok([]));
+
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
+
+    expect($response->strippedHeaders())->toBe(['X-Powered-By', 'Server']);
+});
+
+it('attaches stripHeaders to error responses too', function () {
+    $router = new Router();
+    $router->stripHeaders(['X-Powered-By']);
+
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/nope'));
+
+    expect($response->status())->toBe(404);
+    expect($response->strippedHeaders())->toBe(['X-Powered-By']);
+});
+
+it('attaches stripHeaders to onException responses', function () {
+    $router = new Router();
+    $router->stripHeaders(['X-Powered-By']);
+    $router->onException(fn (Throwable $e): Response => Response::error(500, $e->getMessage()));
+    $router->get('/boom', [], fn (): Response => throw new RuntimeException('kaboom'));
+
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/boom'));
+
+    expect($response->strippedHeaders())->toBe(['X-Powered-By']);
+});
+
+it('deduplicates repeated stripHeaders() calls', function () {
+    $router = new Router();
+    $router->stripHeaders(['X-Powered-By']);
+    $router->stripHeaders(['X-Powered-By', 'Server']);
+    $router->get('/x', [], fn (): Response => Response::ok([]));
+
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
+
+    expect($response->strippedHeaders())->toBe(['X-Powered-By', 'Server']);
+});

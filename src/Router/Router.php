@@ -37,6 +37,9 @@ final class Router
     /** @var array<string, string> */
     private array $defaultHeaders = [];
 
+    /** @var list<string> */
+    private array $strippedHeaders = [];
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
@@ -112,6 +115,24 @@ final class Router
         $root = $this->root();
         foreach ($headers as $name => $value) {
             $root->defaultHeaders[$name] = $value;
+        }
+        return $this;
+    }
+
+    /**
+     * Headers to remove at send time via PHP's header_remove(). Used to
+     * suppress SAPI-injected defaults — most commonly `X-Powered-By` from
+     * php.ini's expose_php directive — that the router itself never sets.
+     *
+     * @param list<string> $names
+     */
+    public function stripHeaders(array $names): self
+    {
+        $root = $this->root();
+        foreach ($names as $name) {
+            if (!in_array($name, $root->strippedHeaders, true)) {
+                $root->strippedHeaders[] = $name;
+            }
         }
         return $this;
     }
@@ -218,6 +239,9 @@ final class Router
             if ($response->header($name) === null) {
                 $response->withHeader($name, $value);
             }
+        }
+        if ($this->strippedHeaders !== []) {
+            $response->withStrippedHeaders($this->strippedHeaders);
         }
         return $response;
     }
