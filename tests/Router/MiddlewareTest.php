@@ -82,3 +82,83 @@ it('lets middleware see and replace the response on the way out', function () {
 
     expect($response->body())->toBe('{"data":{"wrapped":true,"inner_status":200}}');
 });
+
+it('runs global middleware on the default 404 response when no route matches', function () {
+    $router = new Router();
+    $router->use(function (ServerRequest $req, callable $next): Response {
+        return $next($req)->withHeader('X-Powered-By', 'He-Man');
+    });
+
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/nope'));
+
+    expect($response->status())->toBe(404);
+    expect($response->header('X-Powered-By'))->toBe('He-Man');
+});
+
+it('runs global middleware on the default 405 response when method does not match', function () {
+    $router = new Router();
+    $router->use(function (ServerRequest $req, callable $next): Response {
+        return $next($req)->withHeader('X-Powered-By', 'He-Man');
+    });
+    $router->get('/foo', [], fn (): Response => Response::ok([]));
+
+    $response = $router->dispatch(new ServerRequest(method: 'POST', path: '/foo'));
+
+    expect($response->status())->toBe(405);
+    expect($response->header('X-Powered-By'))->toBe('He-Man');
+});
+
+it('runs global middleware on the OPTIONS auto-handler response', function () {
+    $router = new Router();
+    $router->use(function (ServerRequest $req, callable $next): Response {
+        return $next($req)->withHeader('X-Powered-By', 'He-Man');
+    });
+    $router->get('/foo', [], fn (): Response => Response::ok([]));
+
+    $response = $router->dispatch(new ServerRequest(method: 'OPTIONS', path: '/foo'));
+
+    expect($response->status())->toBe(204);
+    expect($response->header('X-Powered-By'))->toBe('He-Man');
+    expect($response->header('Allow'))->toContain('GET');
+});
+
+it('does not double-run global middleware on matched routes', function () {
+    $count = 0;
+    $router = new Router();
+    $router->use(function (ServerRequest $req, callable $next) use (&$count): Response {
+        $count++;
+        return $next($req);
+    });
+    $router->get('/foo', [], fn (): Response => Response::ok([]));
+
+    $router->dispatch(new ServerRequest(method: 'GET', path: '/foo'));
+
+    expect($count)->toBe(1);
+});
+
+it('runs root, sub-router, and per-route middleware in the right order on matched routes', function () {
+    $router = new Router();
+    $router->use(function (ServerRequest $req, callable $next): Response {
+        $req->setAttr('trail', ($req->attr('trail', '')) . 'root,');
+        return $next($req);
+    });
+
+    $api = $router->prefix('/api');
+    $api->use(function (ServerRequest $req, callable $next): Response {
+        $req->setAttr('trail', $req->attr('trail') . 'sub,');
+        return $next($req);
+    });
+
+    $api->get('/x', [
+        'middleware' => [
+            function (ServerRequest $req, callable $next): Response {
+                $req->setAttr('trail', $req->attr('trail') . 'route,');
+                return $next($req);
+            },
+        ],
+    ], fn (): Response => Response::ok(['trail' => Request::attr('trail') . 'handler']));
+
+    $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/x'));
+
+    expect($response->body())->toBe('{"data":{"trail":"root,sub,route,handler"}}');
+});

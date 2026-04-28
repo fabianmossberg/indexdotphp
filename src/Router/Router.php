@@ -180,72 +180,81 @@ final class Router
         try {
             Request::bind($req);
 
-            if (!$this->sorted) {
-                usort($this->routes, fn (array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
-                $this->sorted = true;
-            }
-
-            $path = rtrim($req->path, '/') ?: '/';
-
-            $pathMatched     = false;
-            $allowedMethods  = [];
-            $matchedRoute    = null;
-            $matchedMatches  = null;
-            $stripBody       = false;
-
-            foreach ($this->routes as $route) {
-                if (!preg_match($route['regex'], $path, $matches)) {
-                    continue;
-                }
-                $pathMatched = true;
-
-                if (in_array($req->method, $route['methods'], true)) {
-                    $matchedRoute   = $route;
-                    $matchedMatches = $matches;
-                    $stripBody      = false;
-                    break;
-                }
-
-                foreach ($route['methods'] as $m) {
-                    $allowedMethods[$m] = true;
-                }
-
-                if ($matchedRoute === null && $req->method === 'HEAD' && in_array('GET', $route['methods'], true)) {
-                    $matchedRoute   = $route;
-                    $matchedMatches = $matches;
-                    $stripBody      = true;
-                }
-            }
-
-            if ($matchedRoute !== null) {
-                return $this->executeMatched($matchedRoute, $matchedMatches, $req, $stripBody);
-            }
-
-            if ($pathMatched) {
-                if ($req->method === 'OPTIONS') {
-                    $allowed = array_keys($allowedMethods);
-                    if (in_array('GET', $allowed, true)) {
-                        $allowed[] = 'HEAD';
-                    }
-                    $allowed[] = 'OPTIONS';
-                    $allowed = array_values(array_unique($allowed));
-                    sort($allowed);
-                    return Response::make()
-                        ->withStatus(204)
-                        ->withHeader('Allow', implode(', ', $allowed));
-                }
-
-                $req->setAttr('allowed_methods', implode(', ', array_keys($allowedMethods)));
-                return ($this->errorHandlers[405])($req);
-            }
-
-            return ($this->errorHandlers[404])($req);
+            $pipeline = $this->buildPipeline(
+                fn (ServerRequest $r): Response => $this->dispatchInner($r),
+                $this->middleware,
+            );
+            return $pipeline($req);
         } catch (\Throwable $e) {
             if ($this->exceptionHandler === null) {
                 throw $e;
             }
             return ($this->exceptionHandler)($e);
         }
+    }
+
+    private function dispatchInner(ServerRequest $req): Response
+    {
+        if (!$this->sorted) {
+            usort($this->routes, fn (array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
+            $this->sorted = true;
+        }
+
+        $path = rtrim($req->path, '/') ?: '/';
+
+        $pathMatched     = false;
+        $allowedMethods  = [];
+        $matchedRoute    = null;
+        $matchedMatches  = null;
+        $stripBody       = false;
+
+        foreach ($this->routes as $route) {
+            if (!preg_match($route['regex'], $path, $matches)) {
+                continue;
+            }
+            $pathMatched = true;
+
+            if (in_array($req->method, $route['methods'], true)) {
+                $matchedRoute   = $route;
+                $matchedMatches = $matches;
+                $stripBody      = false;
+                break;
+            }
+
+            foreach ($route['methods'] as $m) {
+                $allowedMethods[$m] = true;
+            }
+
+            if ($matchedRoute === null && $req->method === 'HEAD' && in_array('GET', $route['methods'], true)) {
+                $matchedRoute   = $route;
+                $matchedMatches = $matches;
+                $stripBody      = true;
+            }
+        }
+
+        if ($matchedRoute !== null) {
+            return $this->executeMatched($matchedRoute, $matchedMatches, $req, $stripBody);
+        }
+
+        if ($pathMatched) {
+            if ($req->method === 'OPTIONS') {
+                $allowed = array_keys($allowedMethods);
+                if (in_array('GET', $allowed, true)) {
+                    $allowed[] = 'HEAD';
+                }
+                $allowed[] = 'OPTIONS';
+                $allowed = array_values(array_unique($allowed));
+                sort($allowed);
+                return Response::make()
+                    ->withStatus(204)
+                    ->withHeader('Allow', implode(', ', $allowed));
+            }
+
+            $req->setAttr('allowed_methods', implode(', ', array_keys($allowedMethods)));
+            return ($this->errorHandlers[405])($req);
+        }
+
+        return ($this->errorHandlers[404])($req);
     }
 
     /**
@@ -374,12 +383,19 @@ final class Router
         return $this->parent === null ? $this : $this->parent->root();
     }
 
-    /** @return list<callable> */
+    /**
+     * Collect middleware for a sub-router walk, excluding the root router.
+     * Root middleware is applied once at the outer level in dispatch() so it
+     * also wraps 404 / 405 / OPTIONS responses; including it here would cause
+     * it to run twice for matched routes.
+     *
+     * @return list<callable>
+     */
     private function collectMiddleware(Router $for): array
     {
         $chain = [];
         $r = $for;
-        while ($r !== null) {
+        while ($r !== null && $r->parent !== null) {
             $chain = [...$r->middleware, ...$chain];
             $r = $r->parent;
         }
