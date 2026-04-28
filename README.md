@@ -1,7 +1,7 @@
 # IndexDotPhp
 
 [![tests](https://github.com/fabianmossberg/indexdotphp/actions/workflows/tests.yml/badge.svg)](https://github.com/fabianmossberg/indexdotphp/actions/workflows/tests.yml)
-[![PHP](https://img.shields.io/badge/php-%5E8.1-blue.svg)](https://www.php.net/)
+[![PHP](https://img.shields.io/badge/php-%5E8.3-blue.svg)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
 
 A tiny PHP toolkit for small APIs and websites. The first part — and currently
@@ -12,7 +12,7 @@ enough to stand up a small PHP app without reaching for a full framework.
 
 ## Status
 
-PHP 8.1+. Not yet tagged for release; consume from the git repo for now.
+PHP 8.3+. Not yet tagged for release; consume from the git repo for now.
 
 ## Installation
 

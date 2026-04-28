@@ -5,7 +5,7 @@ correspondingly small.
 
 ## Development setup
 
-Requires PHP 8.1+ and Composer.
+Requires PHP 8.3+ and Composer.
 
 ```bash
 composer install
