@@ -19,6 +19,9 @@ final class Router
     /** @var callable|null */
     private $exceptionHandler = null;
 
+    /** @var list<callable> */
+    private array $middleware = [];
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
@@ -39,12 +42,18 @@ final class Router
         return $this;
     }
 
+    public function use(callable $middleware): self
+    {
+        $this->middleware[] = $middleware;
+        return $this;
+    }
+
     /**
      * @param list<string> $methods
      */
     public function match(array $methods, string $pattern, array $options, callable $handler): self
     {
-        $this->routes[] = $this->compile($methods, $pattern, $handler);
+        $this->routes[] = $this->compile($methods, $pattern, $options, $handler);
         $this->sorted = false;
         return $this;
     }
@@ -119,7 +128,11 @@ final class Router
                 $bound = $req->withParams($params);
                 Request::bind($bound);
 
-                return ($route['handler'])($bound);
+                $pipeline = $this->buildPipeline(
+                    $route['handler'],
+                    [...$this->middleware, ...$route['middleware']],
+                );
+                return $pipeline($bound);
             }
 
             if ($pathMatched) {
@@ -138,9 +151,9 @@ final class Router
 
     /**
      * @param list<string> $methods
-     * @return array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}
+     * @return array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, handler: callable}
      */
-    private function compile(array $methods, string $pattern, callable $handler): array
+    private function compile(array $methods, string $pattern, array $options, callable $handler): array
     {
         $paramNames = [];
         $regex = preg_replace_callback(
@@ -170,7 +183,21 @@ final class Router
             'regex'       => '#\A' . $regex . '\z#u',
             'paramNames'  => $paramNames,
             'specificity' => $specificity,
+            'middleware'  => $options['middleware'] ?? [],
             'handler'     => $handler,
         ];
+    }
+
+    /**
+     * @param list<callable> $middlewares
+     */
+    private function buildPipeline(callable $handler, array $middlewares): callable
+    {
+        $next = $handler;
+        foreach (array_reverse($middlewares) as $mw) {
+            $current = $next;
+            $next = fn(ServerRequest $req): Response => $mw($req, $current);
+        }
+        return $next;
     }
 }
