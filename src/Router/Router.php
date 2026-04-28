@@ -6,7 +6,9 @@ namespace IndexDotPhp\Router;
 
 final class Router
 {
-    /** @var list<array{method: string, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}> */
+    private const STANDARD_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+    /** @var list<array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}> */
     private array $routes = [];
 
     private bool $sorted = true;
@@ -15,11 +17,44 @@ final class Router
     {
     }
 
-    public function get(string $pattern, array $options, callable $handler): self
+    /**
+     * @param list<string> $methods
+     */
+    public function match(array $methods, string $pattern, array $options, callable $handler): self
     {
-        $this->routes[] = $this->compile('GET', $pattern, $handler);
+        $this->routes[] = $this->compile($methods, $pattern, $handler);
         $this->sorted = false;
         return $this;
+    }
+
+    public function get(string $pattern, array $options, callable $handler): self
+    {
+        return $this->match(['GET'], $pattern, $options, $handler);
+    }
+
+    public function post(string $pattern, array $options, callable $handler): self
+    {
+        return $this->match(['POST'], $pattern, $options, $handler);
+    }
+
+    public function put(string $pattern, array $options, callable $handler): self
+    {
+        return $this->match(['PUT'], $pattern, $options, $handler);
+    }
+
+    public function patch(string $pattern, array $options, callable $handler): self
+    {
+        return $this->match(['PATCH'], $pattern, $options, $handler);
+    }
+
+    public function delete(string $pattern, array $options, callable $handler): self
+    {
+        return $this->match(['DELETE'], $pattern, $options, $handler);
+    }
+
+    public function any(string $pattern, array $options, callable $handler): self
+    {
+        return $this->match(self::STANDARD_METHODS, $pattern, $options, $handler);
     }
 
     public function dispatch(?ServerRequest $req = null): Response
@@ -36,7 +71,7 @@ final class Router
         $path = rtrim($req->path, '/') ?: '/';
 
         foreach ($this->routes as $route) {
-            if ($route['method'] !== $req->method) {
+            if (!in_array($req->method, $route['methods'], true)) {
                 continue;
             }
             if (!preg_match($route['regex'], $path, $matches)) {
@@ -58,9 +93,10 @@ final class Router
     }
 
     /**
-     * @return array{method: string, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}
+     * @param list<string> $methods
+     * @return array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, handler: callable}
      */
-    private function compile(string $method, string $pattern, callable $handler): array
+    private function compile(array $methods, string $pattern, callable $handler): array
     {
         $paramNames = [];
         $regex = preg_replace_callback(
@@ -78,7 +114,7 @@ final class Router
         }
 
         return [
-            'method'      => $method,
+            'methods'     => $methods,
             'pattern'     => $pattern,
             'regex'       => '#\A' . $regex . '\z#u',
             'paramNames'  => $paramNames,
