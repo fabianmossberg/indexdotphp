@@ -1,0 +1,13 @@
+# Composer
+/vendor/
+/composer.lock
+
+# PHPUnit
+/.phpunit.result.cache
+/.phpunit.cache/
+
+# OS
+.DS_Store
+
+# Claude Code
+/.claude/settings.local.json
