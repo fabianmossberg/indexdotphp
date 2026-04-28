@@ -4,10 +4,8 @@
 [![PHP](https://img.shields.io/badge/php-%5E8.3-blue.svg)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
 
-A tiny PHP toolkit for small APIs and websites. The first part — and currently
-the only part — is an HTTP router with matching, middleware, sub-routers,
-named decoders, pagination, and standardized JSON responses. Future plans
-include a JWT helper and a thin database wrapper. The goal is to give you just
+A tiny HTTP router for PHP. Matching, middleware, sub-routers, named decoders,
+pagination, and standardized JSON responses. The goal is to give you just
 enough to stand up a small PHP app without reaching for a full framework.
 
 ## Status
