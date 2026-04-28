@@ -34,6 +34,9 @@ final class Router
     /** @var array<string, string> */
     private array $namedRoutes = [];
 
+    /** @var array<string, string> */
+    private array $defaultHeaders = [];
+
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
@@ -94,6 +97,22 @@ final class Router
     public function use(callable $middleware): self
     {
         $this->middleware[] = $middleware;
+        return $this;
+    }
+
+    /**
+     * Register headers applied to every response — including 404, 405, OPTIONS,
+     * and exception responses — at send time. Defaults do not override headers
+     * the response already set, so routes and middleware can opt out per response.
+     *
+     * @param array<string, string> $headers
+     */
+    public function defaultHeaders(array $headers): self
+    {
+        $root = $this->root();
+        foreach ($headers as $name => $value) {
+            $root->defaultHeaders[$name] = $value;
+        }
         return $this;
     }
 
@@ -184,13 +203,23 @@ final class Router
                 fn (ServerRequest $r): Response => $this->dispatchInner($r),
                 $this->middleware,
             );
-            return $pipeline($req);
+            return $this->applyDefaultHeaders($pipeline($req));
         } catch (\Throwable $e) {
             if ($this->exceptionHandler === null) {
                 throw $e;
             }
-            return ($this->exceptionHandler)($e);
+            return $this->applyDefaultHeaders(($this->exceptionHandler)($e));
         }
+    }
+
+    private function applyDefaultHeaders(Response $response): Response
+    {
+        foreach ($this->defaultHeaders as $name => $value) {
+            if ($response->header($name) === null) {
+                $response->withHeader($name, $value);
+            }
+        }
+        return $response;
     }
 
     private function dispatchInner(ServerRequest $req): Response
