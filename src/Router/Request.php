@@ -50,6 +50,35 @@ final class Request
         return self::current()->queryBool($name, $default);
     }
 
+    /**
+     * @param  list<string> $defaults
+     * @return list<string>
+     */
+    public static function queryCsv(string $name, array $defaults = []): array
+    {
+        return self::current()->queryCsv($name, $defaults);
+    }
+
+    /**
+     * @param  list<int> $defaults
+     * @param  list<int> $allowed
+     * @return list<int>
+     */
+    public static function queryCsvInts(string $name, array $defaults = [], array $allowed = []): array
+    {
+        return self::current()->queryCsvInts($name, $defaults, $allowed);
+    }
+
+    /**
+     * @param  list<string> $defaults
+     * @param  list<string> $allowed
+     * @return list<string>
+     */
+    public static function queryCsvStrings(string $name, array $defaults = [], array $allowed = []): array
+    {
+        return self::current()->queryCsvStrings($name, $defaults, $allowed);
+    }
+
     public static function body(): string
     {
         return self::current()->body();

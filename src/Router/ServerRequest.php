@@ -128,6 +128,67 @@ final class ServerRequest
         return in_array(strtolower($v), ['true', '1', 'on', 'yes'], true);
     }
 
+    /**
+     * @param  list<string> $defaults
+     * @return list<string>
+     */
+    public function queryCsv(string $name, array $defaults = []): array
+    {
+        $v = $this->query[$name] ?? null;
+        if ($v === null || $v === '') {
+            return $defaults;
+        }
+        return explode(',', $v);
+    }
+
+    /**
+     * @param  list<int> $defaults
+     * @param  list<int> $allowed
+     * @return list<int>
+     */
+    public function queryCsvInts(string $name, array $defaults = [], array $allowed = []): array
+    {
+        $v = $this->query[$name] ?? null;
+        if ($v === null || $v === '') {
+            return $defaults;
+        }
+        $parts = explode(',', $v);
+        $result = [];
+        foreach ($parts as $p) {
+            if (!ctype_digit($p)) {
+                return $defaults;
+            }
+            $n = (int) $p;
+            if ($allowed !== [] && !in_array($n, $allowed, true)) {
+                return $defaults;
+            }
+            $result[] = $n;
+        }
+        return $result;
+    }
+
+    /**
+     * @param  list<string> $defaults
+     * @param  list<string> $allowed
+     * @return list<string>
+     */
+    public function queryCsvStrings(string $name, array $defaults = [], array $allowed = []): array
+    {
+        $v = $this->query[$name] ?? null;
+        if ($v === null || $v === '') {
+            return $defaults;
+        }
+        $parts = explode(',', $v);
+        if ($allowed !== []) {
+            foreach ($parts as $p) {
+                if (!in_array($p, $allowed, true)) {
+                    return $defaults;
+                }
+            }
+        }
+        return $parts;
+    }
+
     public function body(): string
     {
         return $this->rawBody;
