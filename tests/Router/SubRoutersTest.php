@@ -78,5 +78,5 @@ it('uses the root error handlers for unmatched paths under a sub-router prefix',
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/api/nope'));
 
     expect($response->status())->toBe(404);
-    expect($response->body())->toBe('{"data":null,"message":["route_not_found"]}');
+    expect($response->body())->toBe('{"data":null,"error":{"status":404,"code":"ROUTE_NOT_FOUND","message":"Route not found"}}');
 });

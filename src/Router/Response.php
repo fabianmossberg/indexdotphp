@@ -24,6 +24,27 @@ final class Response
 
     private bool $stripBody = false;
 
+    private ?string $errorMessage = null;
+
+    private ?string $errorCode = null;
+
+    private const DEFAULT_ERROR_CODES = [
+        400 => 'BAD_REQUEST',
+        401 => 'UNAUTHORIZED',
+        403 => 'FORBIDDEN',
+        404 => 'NOT_FOUND',
+        405 => 'METHOD_NOT_ALLOWED',
+        409 => 'CONFLICT',
+        410 => 'GONE',
+        422 => 'UNPROCESSABLE_ENTITY',
+        429 => 'TOO_MANY_REQUESTS',
+        500 => 'INTERNAL_SERVER_ERROR',
+        501 => 'NOT_IMPLEMENTED',
+        502 => 'BAD_GATEWAY',
+        503 => 'SERVICE_UNAVAILABLE',
+        504 => 'GATEWAY_TIMEOUT',
+    ];
+
     private function __construct(
         private int $status,
         private mixed $data,
@@ -39,10 +60,11 @@ final class Response
         return $r;
     }
 
-    public static function error(int $status, string $message, mixed $data = null): self
+    public static function error(int $status, string $message, ?string $code = null, mixed $data = null): self
     {
         $r = new self($status, $data);
-        $r->messages[] = $message;
+        $r->errorMessage = $message;
+        $r->errorCode = $code;
         return $r;
     }
 
@@ -97,6 +119,12 @@ final class Response
     public function withMessage(string $message): self
     {
         $this->messages[] = $message;
+        return $this;
+    }
+
+    public function withCode(string $code): self
+    {
+        $this->errorCode = $code;
         return $this;
     }
 
@@ -182,6 +210,13 @@ final class Response
         $envelope = ['data' => $this->data];
         if ($this->meta !== []) {
             $envelope['meta'] = $this->meta;
+        }
+        if ($this->status >= 400) {
+            $envelope['error'] = [
+                'status'  => $this->status,
+                'code'    => $this->errorCode ?? self::DEFAULT_ERROR_CODES[$this->status] ?? ($this->status >= 500 ? 'SERVER_ERROR' : 'CLIENT_ERROR'),
+                'message' => $this->errorMessage ?? '',
+            ];
         }
         if ($this->messages !== []) {
             $envelope['message'] = $this->messages;

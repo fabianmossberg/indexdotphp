@@ -26,7 +26,7 @@ it('returns 404 when the int decoder rejects non-digit input', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/users/abc'));
 
     expect($response->status())->toBe(404);
-    expect($response->body())->toBe('{"data":null,"message":["route_not_found"]}');
+    expect($response->body())->toBe('{"data":null,"error":{"status":404,"code":"ROUTE_NOT_FOUND","message":"Route not found"}}');
 });
 
 it('uses a custom decoder registered via registerDecoder', function () {

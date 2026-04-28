@@ -47,7 +47,7 @@ it('lets middleware short-circuit by not calling next', function () {
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));
 
     expect($response->status())->toBe(401);
-    expect($response->body())->toBe('{"data":null,"message":["denied"]}');
+    expect($response->body())->toBe('{"data":null,"error":{"status":401,"code":"UNAUTHORIZED","message":"denied"}}');
 });
 
 it('runs per-route middleware after global middleware', function () {

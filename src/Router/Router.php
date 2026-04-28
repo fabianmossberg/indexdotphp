@@ -37,8 +37,8 @@ final class Router
     public function __construct(array $config = [])
     {
         $this->errorHandlers = [
-            404 => fn (): Response => Response::error(404, 'route_not_found'),
-            405 => fn (): Response => Response::error(405, 'method_not_allowed'),
+            404 => fn (): Response => Response::error(404, 'Route not found', code: 'ROUTE_NOT_FOUND'),
+            405 => fn (): Response => Response::error(405, 'Method not allowed', code: 'METHOD_NOT_ALLOWED'),
         ];
 
         $this->paginationConfig = [
@@ -265,7 +265,7 @@ final class Router
                 if ($value === null) {
                     $status = $route['decode_failure'];
                     $handler = $this->errorHandlers[$status]
-                        ?? fn (): Response => Response::error($status, 'decode_failed');
+                        ?? fn (): Response => Response::error($status, 'Decode failed', code: 'DECODE_FAILED');
                     return $handler($req);
                 }
             }

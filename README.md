@@ -122,7 +122,7 @@ invocation, so any `measure()` calls before it runs are discarded.
 
 ## Wire envelope
 
-Every JSON response uses the same shape:
+Successful responses (status < 400) use this shape:
 
 ```json
 {
@@ -132,20 +132,56 @@ Every JSON response uses the same shape:
 }
 ```
 
-`data` is always present. `meta` only appears for paginated routes (or when set
-explicitly via `withMeta`). `message` only appears when at least one message was
-appended via `Response::ok($x, 'msg')`, `Response::error(...)`, or
-`->withMessage('msg')`.
+Error responses (status ≥ 400) carry an `error` block instead:
 
-If you want a different shape (custom keys at the root, or non-JSON output like
-CSV / HTML / files), use the raw factory or fluent escape hatch:
+```json
+{
+  "data":  null,
+  "error": {
+    "status":  500,
+    "code":    "INTERNAL_SERVER_ERROR",
+    "message": "Database is on fire"
+  }
+}
+```
+
+The shape switches automatically based on status — there's no flag. `code` is a
+machine-readable identifier (stable across translations, useful for client
+branching); `message` is human-readable. If you don't pass `code:` explicitly,
+the router derives one from the HTTP status (`404` → `NOT_FOUND`, `429` →
+`TOO_MANY_REQUESTS`, etc.):
+
+```php
+Response::error(500, 'Database is on fire', code: 'DB_CONNECTION_FAILED');
+Response::error(422, 'invalid input')->withCode('VALIDATION_FAILED');
+Response::error(404, 'no such order');  // code defaults to NOT_FOUND
+```
+
+The `data` slot is still available on errors — useful for validation responses
+where you want field-level details:
+
+```php
+Response::error(
+    422,
+    'validation failed',
+    code: 'VALIDATION_FAILED',
+    data: ['errors' => ['email' => 'must be a string']],
+);
+```
+
+Built-in errors come pre-coded: `route_not_found` → `ROUTE_NOT_FOUND`,
+`method_not_allowed` → `METHOD_NOT_ALLOWED`, `decode_failure` → `DECODE_FAILED`.
+
+If you want a completely different shape (custom keys at the root, or non-JSON
+output like CSV / HTML / files), use the raw factory or fluent escape hatch:
 
 ```php
 Response::raw('{"users":[],"count":0}', 'application/json');
 Response::make()->withStatus(201)->withRaw($csv, 'text/csv');
 ```
 
-Raw responses bypass the envelope entirely — `meta` and `message` are not added.
+Raw responses bypass the envelope entirely — `data`, `error`, `meta`, and
+`message` are not added.
 
 ## Running the tests
 

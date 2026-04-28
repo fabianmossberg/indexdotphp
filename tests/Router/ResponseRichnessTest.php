@@ -88,3 +88,50 @@ it('defaults Response::raw() content type to text/plain', function () {
     expect($response->body())->toBe('hello');
     expect($response->header('Content-Type'))->toBe('text/plain');
 });
+
+it('renders the error envelope when an explicit code is passed to Response::error()', function () {
+    $response = Response::error(500, 'Database is on fire', code: 'DB_CONNECTION_FAILED');
+
+    expect($response->body())->toBe('{"data":null,"error":{"status":500,"code":"DB_CONNECTION_FAILED","message":"Database is on fire"}}');
+});
+
+it('lets withCode() set the error code fluently', function () {
+    $response = Response::error(422, 'invalid input')->withCode('VALIDATION_FAILED');
+
+    expect($response->body())->toBe('{"data":null,"error":{"status":422,"code":"VALIDATION_FAILED","message":"invalid input"}}');
+});
+
+it('derives a default error code from common HTTP statuses when none is set', function () {
+    expect(Response::error(400, 'bad')->body())
+        ->toBe('{"data":null,"error":{"status":400,"code":"BAD_REQUEST","message":"bad"}}');
+    expect(Response::error(403, 'no')->body())
+        ->toBe('{"data":null,"error":{"status":403,"code":"FORBIDDEN","message":"no"}}');
+    expect(Response::error(429, 'slow down')->body())
+        ->toBe('{"data":null,"error":{"status":429,"code":"TOO_MANY_REQUESTS","message":"slow down"}}');
+});
+
+it('falls back to CLIENT_ERROR / SERVER_ERROR for unmapped statuses', function () {
+    expect(Response::error(418, "I'm a teapot")->body())
+        ->toBe('{"data":null,"error":{"status":418,"code":"CLIENT_ERROR","message":"I\'m a teapot"}}');
+    expect(Response::error(599, 'unknown server thing')->body())
+        ->toBe('{"data":null,"error":{"status":599,"code":"SERVER_ERROR","message":"unknown server thing"}}');
+});
+
+it('lets the data slot carry validation details on error responses', function () {
+    $response = Response::error(
+        422,
+        'validation failed',
+        code: 'VALIDATION_FAILED',
+        data: ['errors' => ['email' => 'must be a string']],
+    );
+
+    expect($response->body())->toBe(
+        '{"data":{"errors":{"email":"must be a string"}},"error":{"status":422,"code":"VALIDATION_FAILED","message":"validation failed"}}',
+    );
+});
+
+it('renders the success envelope when status is below 400', function () {
+    $response = Response::ok(['id' => 1])->withMessage('cache hit');
+
+    expect($response->body())->toBe('{"data":{"id":1},"message":["cache hit"]}');
+});
