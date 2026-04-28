@@ -25,6 +25,10 @@
     "require-dev": {
         "pestphp/pest": "^4.6"
     },
+    "suggest": {
+        "ext-pcov": "Code coverage driver for composer test:cov. Install via 'pecl install pcov'.",
+        "ext-xdebug": "Alternative coverage driver if pcov isn't available."
+    },
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true
