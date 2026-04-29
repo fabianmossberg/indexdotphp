@@ -76,7 +76,7 @@ php -S localhost:8000 -t public public/index.php
 - **Match priority**: static segments beat dynamic; constrained dynamic beats unconstrained; registration order breaks ties
 - **Middleware**: global (`$router->use(...)`), per-route (`'middleware' => [...]`), and sub-router scoped — onion model
 - **Sub-routers**: `$api = $router->prefix('/api/v1')` — nested prefixes accumulate, middleware is scoped to the subtree
-- **Decoders**: `'decode' => ['id' => 'int']` route option; built-ins for `int`, `string`, `slug`, `csv-int`, `csv-string`; register custom via `Router::registerDecoder`
+- **Decoders**: `'decode' => ['id' => 'int']` route option; built-ins for `int`, `slug`, `csv-int`, `csv-string`; register custom via `Router::registerDecoder`
 - **Pagination**: `'pagination' => true` route option, `Response::list($data, $total)`, automatic `meta` envelope
 - **Cookies**: `Request::cookie()`, `Response::withCookie($name, $value, $options)`
 - **Headers**: `Response::withHeader / withoutHeader`, `Router::defaultHeaders([...])` for static headers on every response, `Router::stripHeaders([...])` to suppress SAPI defaults like `X-Powered-By`

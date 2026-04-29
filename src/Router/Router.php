@@ -56,7 +56,6 @@ final class Router
 
         $this->decoders = [
             'int'        => fn (string $s): ?int => ctype_digit($s) ? (int) $s : null,
-            'string'     => fn (string $s): string => $s,
             'slug'       => fn (string $s): ?string => preg_match('/^[a-z0-9-]+$/', $s) ? $s : null,
             'csv-int'    => function (string $s): ?array {
                 $parts = explode(',', $s);

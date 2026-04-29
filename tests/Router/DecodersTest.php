@@ -89,3 +89,10 @@ it('parses comma-separated lists via csv-int and csv-string', function () {
     $bad = $router->dispatch(new ServerRequest(method: 'GET', path: '/ints/1,abc,3'));
     expect($bad->status())->toBe(404);
 });
+
+it('no longer ships a no-op string decoder; using it raises Unknown decoder', function () {
+    $router = new Router();
+    $router->get('/x/:name', ['decode' => ['name' => 'string']], fn (): Response => Response::ok([]));
+
+    $router->dispatch(new ServerRequest(method: 'GET', path: '/x/anything'));
+})->throws(LogicException::class, 'Unknown decoder: string');
