@@ -10,31 +10,13 @@ enough to stand up a small PHP app without reaching for a full framework.
 
 ## Status
 
-PHP 8.3+. Not yet tagged for release; consume from the git repo for now.
+Tagged releases follow [SemVer](https://semver.org/). Requires PHP 8.3+.
 
 ## Installation
 
-This package isn't on Packagist yet. Add the git repo and `dev` stability to
-your project's `composer.json`:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "git",
-            "url": "git@github.com:fabianmossberg/indexdotphp.git"
-        }
-    ],
-    "require": {
-        "fabianmossberg/indexdotphp": "*"
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
-}
+```bash
+composer require fabianmossberg/indexdotphp
 ```
-
-Then `composer install`. To pick up new commits, run `composer update
-fabianmossberg/indexdotphp`.
 
 ## Quick start
 
@@ -190,6 +172,9 @@ Raw responses bypass the envelope entirely — `data`, `error`, `meta`, and
 ```bash
 composer test       # run the suite
 composer test:cov   # with coverage (requires pcov or xdebug)
+composer lint       # php-cs-fixer dry-run
+composer stan       # phpstan
+composer check      # lint + stan + test:cov in one go
 ```
 
 The coverage script gates at 80%; the suite currently sits around 96%.

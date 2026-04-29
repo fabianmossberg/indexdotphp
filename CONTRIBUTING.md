@@ -11,6 +11,9 @@ Requires PHP 8.3+ and Composer.
 composer install
 composer test       # run the suite
 composer test:cov   # with coverage (requires pcov or xdebug)
+composer lint       # php-cs-fixer dry-run
+composer stan       # phpstan analyse
+composer check      # lint + stan + test:cov in one go
 ```
 
 The coverage script gates at 80%; the suite currently sits around 96%. New
