@@ -71,7 +71,7 @@ php -S localhost:8000 -t public public/index.php
 
 ## Features
 
-- **HTTP verbs**: `get`, `post`, `put`, `patch`, `delete`, `match([...])`, `any`
+- **HTTP verbs**: `get`, `post`, `put`, `patch`, `delete`, `match([...])`, `standardVerbs`
 - **Path params**: `/users/:id`, `/users/:id<\d+>` (regex constraint), `/files/:path<.+>` (multi-segment)
 - **Match priority**: static segments beat dynamic; constrained dynamic beats unconstrained; registration order breaks ties
 - **Middleware**: global (`$router->use(...)`), per-route (`'middleware' => [...]`), and sub-router scoped — onion model

@@ -14,7 +14,7 @@ final class Timing
 
     public function __invoke(ServerRequest $req, callable $next): Response
     {
-        self::$entries = [];
+        self::reset();
 
         $start = microtime(true);
         $response = $next($req);
@@ -29,6 +29,11 @@ final class Timing
         $response->withHeader('Server-Timing', implode(', ', $parts));
 
         return $response;
+    }
+
+    private static function reset(): void
+    {
+        self::$entries = [];
     }
 
     /**

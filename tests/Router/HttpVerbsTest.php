@@ -38,3 +38,11 @@ it('matches all standard verbs via standardVerbs()', function () {
         expect($router->dispatch(new ServerRequest(method: $method, path: '/x'))->status())->toBe(200);
     }
 });
+
+it('uppercases method names passed to match() so lowercase still binds', function () {
+    $router = new Router();
+    $router->match(['get', 'post'], '/x', [], fn (): Response => Response::ok(['ok' => true]));
+
+    expect($router->dispatch(new ServerRequest(method: 'GET', path: '/x'))->status())->toBe(200);
+    expect($router->dispatch(new ServerRequest(method: 'POST', path: '/x'))->status())->toBe(200);
+});

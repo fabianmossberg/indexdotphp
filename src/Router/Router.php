@@ -4,6 +4,23 @@ declare(strict_types=1);
 
 namespace IndexDotPhp\Router;
 
+/**
+ * @phpstan-type RouteShape array{
+ *     methods: list<string>,
+ *     pattern: string,
+ *     regex: string,
+ *     paramNames: list<string>,
+ *     specificity: list<int>,
+ *     middleware: list<callable>,
+ *     decode: array<string, string>,
+ *     decode_failure: int,
+ *     pagination: bool,
+ *     validate: ?callable,
+ *     name: ?string,
+ *     handler: callable,
+ *     router: Router
+ * }
+ */
 final class Router
 {
     private const STANDARD_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
@@ -11,7 +28,7 @@ final class Router
     private ?Router $parent = null;
     private string $prefix = '';
 
-    /** @var list<array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, handler: callable, router: Router}> */
+    /** @var list<RouteShape> */
     private array $routes = [];
 
     private bool $sorted = true;
@@ -47,9 +64,23 @@ final class Router
             405 => fn (): Response => Response::error(405, 'Method not allowed', code: 'METHOD_NOT_ALLOWED'),
         ];
 
+        $defaultSize = $config['default_pagination_size'] ?? 20;
+        $maxSize     = $config['max_pagination_size'] ?? 100;
+
+        if (!is_int($defaultSize) || $defaultSize < 1) {
+            throw new \InvalidArgumentException(
+                'default_pagination_size must be an int >= 1, got ' . var_export($defaultSize, true),
+            );
+        }
+        if (!is_int($maxSize) || $maxSize < 1) {
+            throw new \InvalidArgumentException(
+                'max_pagination_size must be an int >= 1, got ' . var_export($maxSize, true),
+            );
+        }
+
         $this->paginationConfig = [
-            'default_size' => $config['default_pagination_size'] ?? 20,
-            'max_size'     => $config['max_pagination_size'] ?? 100,
+            'default_size' => $defaultSize,
+            'max_size'     => $maxSize,
             'page_key'     => $config['pagination_query_keys']['page'] ?? 'page',
             'size_key'     => $config['pagination_query_keys']['size'] ?? 'per_page',
         ];
@@ -141,8 +172,8 @@ final class Router
      */
     public function match(array $methods, string $pattern, array $options, callable $handler): self
     {
+        $methods = array_map(strtoupper(...), $methods);
         $compiled = $this->compile($methods, $this->prefix . $pattern, $options, $handler);
-        $compiled['router'] = $this;
         $root = $this->root();
         $root->routes[] = $compiled;
         $root->sorted = false;
@@ -310,8 +341,8 @@ final class Router
     }
 
     /**
-     * @param array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, validate: ?callable, handler: callable, router: Router} $route
-     * @param array<string|int, string>                                                                                                                                                                                            $matches
+     * @param RouteShape                $route
+     * @param array<string|int, string> $matches
      */
     private function executeMatched(array $route, array $matches, ServerRequest $req, bool $stripBody): Response
     {
@@ -338,10 +369,11 @@ final class Router
         $page = 1;
         $size = $this->paginationConfig['default_size'];
         if ($route['pagination']) {
-            $size = min(
-                $bound->queryInt($this->paginationConfig['size_key'], $this->paginationConfig['default_size']),
-                $this->paginationConfig['max_size'],
-            );
+            $rawSize = $bound->queryInt($this->paginationConfig['size_key'], $this->paginationConfig['default_size']);
+            if ($rawSize < 1) {
+                $rawSize = $this->paginationConfig['default_size'];
+            }
+            $size = min($rawSize, $this->paginationConfig['max_size']);
             $page = max(1, $bound->queryInt($this->paginationConfig['page_key'], 1));
             $bound->setAttr(Request::PAGE_ATTR, $page);
             $bound->setAttr(Request::SIZE_ATTR, $size);
@@ -386,8 +418,8 @@ final class Router
     }
 
     /**
-     * @param list<string> $methods
-     * @return array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, handler: callable}
+     * @param  list<string> $methods
+     * @return RouteShape
      */
     private function compile(array $methods, string $pattern, array $options, callable $handler): array
     {
@@ -426,6 +458,7 @@ final class Router
             'validate'       => $options['validate'] ?? null,
             'name'           => $options['name'] ?? null,
             'handler'        => $handler,
+            'router'         => $this,
         ];
     }
 
@@ -459,7 +492,7 @@ final class Router
     {
         $chain = [];
         $r = $for;
-        while ($r !== null && $r->parent !== null) {
+        while ($r->parent !== null) {
             $chain = [...$r->middleware, ...$chain];
             $r = $r->parent;
         }

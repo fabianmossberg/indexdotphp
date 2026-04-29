@@ -82,11 +82,10 @@ it('still records a Timing::measure() entry when the closure throws', function (
     $router->use(new Timing());
     $router->onException(fn (Throwable $e): Response => Response::error(500, $e->getMessage()));
     $router->get('/x', [], function (): Response {
-        Timing::measure('failing', function () {
+        Timing::measure('failing', function (): never {
             usleep(200);
             throw new RuntimeException('boom');
         });
-        return Response::ok([]);
     });
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/x'));

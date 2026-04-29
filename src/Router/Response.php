@@ -104,6 +104,7 @@ final class Response
     {
         $r = new self($status, null);
         $r->headers['Location'] = $location;
+        $r->rawBody = '';
         return $r;
     }
 

@@ -24,7 +24,8 @@
     },
     "require-dev": {
         "pestphp/pest": "^4.6",
-        "friendsofphp/php-cs-fixer": "^3.95"
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.1"
     },
     "suggest": {
         "ext-pcov": "Code coverage driver for composer test:cov. Install via 'pecl install pcov'.",
@@ -39,6 +40,7 @@
         "test": "./vendor/bin/pest",
         "test:cov": "./vendor/bin/pest --coverage --min=80",
         "lint": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
-        "format": "./vendor/bin/php-cs-fixer fix"
+        "format": "./vendor/bin/php-cs-fixer fix",
+        "stan": "./vendor/bin/phpstan analyse --memory-limit=512M"
      }
 }
