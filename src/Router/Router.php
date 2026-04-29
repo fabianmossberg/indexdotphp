@@ -47,23 +47,26 @@ final class Router
             405 => fn (): Response => Response::error(405, 'Method not allowed', code: 'METHOD_NOT_ALLOWED'),
         ];
 
+        $defaultSize = $config['default_pagination_size'] ?? 20;
+        $maxSize     = $config['max_pagination_size'] ?? 100;
+
+        if (!is_int($defaultSize) || $defaultSize < 1) {
+            throw new \InvalidArgumentException(
+                'default_pagination_size must be an int >= 1, got ' . var_export($defaultSize, true),
+            );
+        }
+        if (!is_int($maxSize) || $maxSize < 1) {
+            throw new \InvalidArgumentException(
+                'max_pagination_size must be an int >= 1, got ' . var_export($maxSize, true),
+            );
+        }
+
         $this->paginationConfig = [
-            'default_size' => $config['default_pagination_size'] ?? 20,
-            'max_size'     => $config['max_pagination_size'] ?? 100,
+            'default_size' => $defaultSize,
+            'max_size'     => $maxSize,
             'page_key'     => $config['pagination_query_keys']['page'] ?? 'page',
             'size_key'     => $config['pagination_query_keys']['size'] ?? 'per_page',
         ];
-
-        if ($this->paginationConfig['default_size'] < 1) {
-            throw new \InvalidArgumentException(
-                'default_pagination_size must be >= 1, got ' . $this->paginationConfig['default_size'],
-            );
-        }
-        if ($this->paginationConfig['max_size'] < 1) {
-            throw new \InvalidArgumentException(
-                'max_pagination_size must be >= 1, got ' . $this->paginationConfig['max_size'],
-            );
-        }
 
         $this->decoders = [
             'int'        => fn (string $s): ?int => ctype_digit($s) ? (int) $s : null,

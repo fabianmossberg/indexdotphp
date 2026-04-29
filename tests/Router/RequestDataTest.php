@@ -131,10 +131,12 @@ it('exposes method and path via the Request facade', function () {
 it('falls back to defaults when a query value is an array (PHP bracket form)', function () {
     $router = new Router();
     $router->get('/x', [], fn (): Response => Response::ok([
-        'plain'  => Request::query('tags', 'fallback'),
-        'as_int' => Request::queryInt('tags', 99),
-        'as_csv' => Request::queryCsv('tags', ['default']),
-        'as_bool' => Request::queryBool('tags', true),
+        'plain'           => Request::query('tags', 'fallback'),
+        'as_int'          => Request::queryInt('tags', 99),
+        'as_csv'          => Request::queryCsv('tags', ['default']),
+        'as_bool'         => Request::queryBool('tags', true),
+        'as_csv_ints'     => Request::queryCsvInts('tags', [7]),
+        'as_csv_strings'  => Request::queryCsvStrings('tags', ['fallback-str']),
     ]));
 
     $response = $router->dispatch(new ServerRequest(
@@ -143,7 +145,9 @@ it('falls back to defaults when a query value is an array (PHP bracket form)', f
         query:  ['tags' => ['a', 'b']],
     ));
 
-    expect($response->body())->toBe('{"data":{"plain":"fallback","as_int":99,"as_csv":["default"],"as_bool":true}}');
+    expect($response->body())->toBe(
+        '{"data":{"plain":"fallback","as_int":99,"as_csv":["default"],"as_bool":true,"as_csv_ints":[7],"as_csv_strings":["fallback-str"]}}',
+    );
 });
 
 it('returns all headers (lowercased) via Request::headers()', function () {

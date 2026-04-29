@@ -75,11 +75,15 @@ it('does not add meta when handler returns Response::ok on a paginated route', f
 
 it('rejects default_pagination_size <= 0 at construction time', function () {
     new Router(['default_pagination_size' => 0]);
-})->throws(InvalidArgumentException::class, 'default_pagination_size must be >= 1');
+})->throws(InvalidArgumentException::class, 'default_pagination_size must be an int >= 1');
 
 it('rejects max_pagination_size <= 0 at construction time', function () {
     new Router(['max_pagination_size' => 0]);
-})->throws(InvalidArgumentException::class, 'max_pagination_size must be >= 1');
+})->throws(InvalidArgumentException::class, 'max_pagination_size must be an int >= 1');
+
+it('rejects non-int pagination sizes at construction time', function () {
+    new Router(['default_pagination_size' => '20']);
+})->throws(InvalidArgumentException::class, 'default_pagination_size must be an int >= 1');
 
 it('falls back to default_size when ?per_page=0 is passed', function () {
     $router = new Router();
