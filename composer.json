@@ -1,6 +1,12 @@
 {
     "name": "fabianmossberg/indexdotphp",
     "description": "Tiny PHP framework.",
+    "keywords": [
+        "framework",
+        "micro-framework",
+        "router",
+        "php"
+    ],
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -16,9 +22,15 @@
     "authors": [
         {
             "name": "Fabian Mossberg",
-            "email": "fabian@sleepingfox.io"
+            "email": "fabian@sleepingfox.io",
+            "homepage": "https://x.com/fabianmossberg"
         }
     ],
+    "homepage": "https://indexdotphp.com",
+    "support": {
+        "issues": "https://github.com/fabianmossberg/indexdotphp/issues",
+        "source": "https://github.com/fabianmossberg/indexdotphp"
+    },
     "require": {
         "php": "^8.3"
     },
@@ -34,13 +46,19 @@
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true
-        }
+        },
+        "sort-packages": true
     },
-     "scripts": {
+    "scripts": {
         "test": "./vendor/bin/pest",
         "test:cov": "./vendor/bin/pest --coverage --min=80",
         "lint": "./vendor/bin/php-cs-fixer fix --dry-run --diff",
         "format": "./vendor/bin/php-cs-fixer fix",
-        "stan": "./vendor/bin/phpstan analyse --memory-limit=512M"
-     }
+        "stan": "./vendor/bin/phpstan analyse --memory-limit=512M",
+        "check": [
+            "@lint",
+            "@stan",
+            "@test:cov"
+        ]
+    }
 }
