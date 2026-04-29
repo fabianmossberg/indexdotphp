@@ -5,6 +5,35 @@ declare(strict_types=1);
 namespace IndexDotPhp\Router;
 
 /**
+ * Per-route options accepted by `match()` and the verb shortcuts (`get`,
+ * `post`, …). All keys are optional.
+ *
+ *  - `middleware`: per-route middleware, runs after global + sub-router
+ *    middleware and before the handler. Signature:
+ *    `function (ServerRequest $req, callable $next): Response`.
+ *  - `decode`: maps a path-parameter name to a registered decoder name
+ *    (built-ins: `int`, `slug`, `csv-int`, `csv-string`). A decoder
+ *    returning null short-circuits with the status from `decode_failure`.
+ *  - `decode_failure`: HTTP status used when a decoder returns null.
+ *    Defaults to 404; set to 400 for "this is a bad request" semantics.
+ *  - `pagination`: when true, the router reads `page` and `per_page` from
+ *    the query string, exposes them via `Request::page()` / `size()`, and
+ *    auto-fills `meta.total/page/size/pages` on a `Response::list()`.
+ *  - `validate`: pre-handler input validator. Returns null to continue,
+ *    or an array of field-level errors to short-circuit with a 422
+ *    `VALIDATION_FAILED` envelope. Signature:
+ *    `function (ServerRequest $req): ?array`.
+ *  - `name`: stable name for `Router::url('name', [...])` URL generation.
+ *
+ * @phpstan-type RouteOptions array{
+ *     middleware?: list<callable>,
+ *     decode?: array<string, string>,
+ *     decode_failure?: int,
+ *     pagination?: bool,
+ *     validate?: callable(ServerRequest): ?array,
+ *     name?: string,
+ * }
+ *
  * @phpstan-type RouteShape array{
  *     methods: list<string>,
  *     pattern: string,
@@ -171,7 +200,11 @@ final class Router
     }
 
     /**
-     * @param list<string> $methods
+     * Register a route for one or more HTTP methods. Verb shortcuts
+     * (`get`, `post`, …) call this with a single-method list.
+     *
+     * @param list<string>  $methods HTTP methods, case-insensitive (`'GET'`, `'post'`).
+     * @param RouteOptions  $options Route options. See class docblock for the full key list.
      */
     public function match(array $methods, string $pattern, array $options, callable $handler): self
     {
@@ -207,31 +240,37 @@ final class Router
         );
     }
 
+    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
     public function get(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['GET'], $pattern, $options, $handler);
     }
 
+    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
     public function post(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['POST'], $pattern, $options, $handler);
     }
 
+    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
     public function put(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['PUT'], $pattern, $options, $handler);
     }
 
+    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
     public function patch(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['PATCH'], $pattern, $options, $handler);
     }
 
+    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
     public function delete(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['DELETE'], $pattern, $options, $handler);
     }
 
+    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
     public function standardVerbs(string $pattern, array $options, callable $handler): self
     {
         return $this->match(self::STANDARD_METHODS, $pattern, $options, $handler);
