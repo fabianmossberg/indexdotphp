@@ -166,3 +166,19 @@ it('accepts Response::error() with status exactly 400', function () {
 
     expect($response->status())->toBe(400);
 });
+
+it('rejects withMessage() on a response built via Response::error()', function () {
+    Response::error(500, 'boom')->withMessage('debug breadcrumb');
+})->throws(LogicException::class, 'withMessage() is not supported on error responses');
+
+it('rejects withMessage() once the status has been bumped above 400', function () {
+    Response::ok([])->withStatus(500)->withMessage('debug breadcrumb');
+})->throws(LogicException::class);
+
+it('still accepts withMessage() on success responses', function () {
+    $response = Response::ok([])
+        ->withMessage('first')
+        ->withMessage('second');
+
+    expect($response->body())->toBe('{"data":[],"message":["first","second"]}');
+});

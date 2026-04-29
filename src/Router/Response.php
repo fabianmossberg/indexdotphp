@@ -126,6 +126,11 @@ final class Response
 
     public function withMessage(string $message): self
     {
+        if ($this->status >= 400) {
+            throw new \LogicException(
+                'withMessage() is not supported on error responses; the success-side message[] array is omitted from the error envelope. Use Response::error()\'s message argument or withCode() instead.',
+            );
+        }
         $this->messages[] = $message;
         return $this;
     }
