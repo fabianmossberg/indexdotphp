@@ -137,6 +137,13 @@ final class Router
     public function onError(int|callable $status, ?callable $handler = null): self
     {
         if (is_callable($status)) {
+            if ($handler !== null) {
+                throw new \InvalidArgumentException(
+                    'onError() does not accept a second argument when the first is a callable; '
+                    . 'use onError(int $status, callable $handler) for status-specific handlers '
+                    . 'or onError(callable $handler) for the default handler.',
+                );
+            }
             $this->root()->errorHandlers['*'] = $status;
             return $this;
         }

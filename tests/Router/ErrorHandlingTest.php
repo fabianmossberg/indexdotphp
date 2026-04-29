@@ -51,12 +51,19 @@ it('exposes allowed_methods on the request attribute bag for 405 handlers', func
     expect($response->body())->toContain('GET')->toContain('PUT');
 });
 
-it('runs the default error handler on a router-returned 404', function () {
+it('runs the default error handler on a router-returned 404 and passes the ServerRequest', function () {
     $router = new Router();
-    $router->onError(fn (Response $r): Response => Response::raw('default:' . $r->status(), 'text/plain')->withStatus($r->status()));
+    $captured = null;
+    $router->onError(function (Response $r, ServerRequest $req) use (&$captured): Response {
+        $captured = $req;
+        return Response::raw('default:' . $r->status(), 'text/plain')->withStatus($r->status());
+    });
 
     $response = $router->dispatch(new ServerRequest(method: 'GET', path: '/nope'));
 
+    expect($captured)->toBeInstanceOf(ServerRequest::class);
+    expect($captured->method)->toBe('GET');
+    expect($captured->path)->toBe('/nope');
     expect($response->status())->toBe(404);
     expect($response->body())->toBe('default:404');
     expect($response->header('Content-Type'))->toBe('text/plain');
@@ -131,4 +138,11 @@ it('does not re-process the default handler\'s own returned error response', fun
 it('throws when onError is called with an int status but no handler', function () {
     $router = new Router();
     expect(fn () => $router->onError(404))->toThrow(\InvalidArgumentException::class);
+});
+
+it('throws when onError is called with a callable first argument and a second argument', function () {
+    $router = new Router();
+    $a = fn (Response $r): Response => $r;
+    $b = fn (Response $r): Response => $r;
+    expect(fn () => $router->onError($a, $b))->toThrow(\InvalidArgumentException::class);
 });
