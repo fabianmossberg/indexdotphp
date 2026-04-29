@@ -224,16 +224,16 @@ final class Router
                 fn (ServerRequest $r): Response => $this->dispatchInner($r),
                 $this->middleware,
             );
-            return $this->applyDefaultHeaders($pipeline($req));
+            return $this->applyResponsePolicy($pipeline($req));
         } catch (\Throwable $e) {
             if ($this->exceptionHandler === null) {
                 throw $e;
             }
-            return $this->applyDefaultHeaders(($this->exceptionHandler)($e));
+            return $this->applyResponsePolicy(($this->exceptionHandler)($e));
         }
     }
 
-    private function applyDefaultHeaders(Response $response): Response
+    private function applyResponsePolicy(Response $response): Response
     {
         foreach ($this->defaultHeaders as $name => $value) {
             if ($response->header($name) === null) {
