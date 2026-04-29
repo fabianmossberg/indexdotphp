@@ -31,6 +31,13 @@ final class Response
     /** @var list<string> */
     private array $strippedHeaders = [];
 
+    /**
+     * Flags shared by `Response::json()` and the envelope encoder in
+     * `body()`. Centralised so both paths encode consistently — changing the
+     * flag set in one place updates both.
+     */
+    private const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
+
     private const DEFAULT_ERROR_CODES = [
         400 => 'BAD_REQUEST',
         401 => 'UNAUTHORIZED',
@@ -93,6 +100,28 @@ final class Response
         $r->rawBody = $body;
         $r->headers['Content-Type'] = $contentType;
         return $r;
+    }
+
+    public static function html(string $body): self
+    {
+        return self::raw($body, 'text/html;charset=utf-8');
+    }
+
+    /**
+     * Non-enveloped JSON output. The escape hatch for proxying external APIs
+     * or webhooks where the framework's `{ "data": ... }` envelope is undesired.
+     * For framework-styled JSON, prefer `Response::ok($data)`.
+     *
+     * Encoded with the same flags as the envelope encoder, so output is
+     * consistent across both shapes. Throws `\JsonException` on unencodable
+     * input — same exception type the framework documents for `Request::bodyJson()`.
+     */
+    public static function json(mixed $data): self
+    {
+        return self::raw(
+            json_encode($data, self::JSON_FLAGS),
+            'application/json',
+        );
     }
 
     public static function noContent(): self
@@ -265,10 +294,7 @@ final class Response
             $envelope['message'] = $this->messages;
         }
 
-        return json_encode(
-            $envelope,
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
-        );
+        return json_encode($envelope, self::JSON_FLAGS);
     }
 
     private function effectiveErrorCode(): string
