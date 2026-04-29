@@ -26,7 +26,7 @@ it('runs the handler when the validator returns null', function () {
 it('returns a 422 with VALIDATION_FAILED when the validator returns an array', function () {
     $router = new Router();
     $router->post('/users', [
-        'validate' => fn (ServerRequest $req): ?array => [
+        'validate' => fn (ServerRequest $req): array => [
             'email' => 'is required',
             'age'   => 'must be a number',
         ],
@@ -44,7 +44,7 @@ it('does not invoke the handler when the validator returns errors', function () 
     $handlerRan = false;
     $router = new Router();
     $router->post('/users', [
-        'validate' => fn (ServerRequest $req): ?array => ['_' => 'nope'],
+        'validate' => fn (ServerRequest $req): array => ['_' => 'nope'],
     ], function () use (&$handlerRan): Response {
         $handlerRan = true;
         return Response::ok([]);
@@ -116,7 +116,7 @@ it('lets per-route middleware short-circuit before validation runs', function ()
 it('lets the validator return a nested error structure as the data payload', function () {
     $router = new Router();
     $router->post('/orders', [
-        'validate' => fn (ServerRequest $req): ?array => [
+        'validate' => fn (ServerRequest $req): array => [
             'items' => [
                 ['index' => 0, 'message' => 'sku missing'],
                 ['index' => 2, 'message' => 'qty must be positive'],

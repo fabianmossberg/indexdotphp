@@ -492,7 +492,7 @@ final class Router
     {
         $chain = [];
         $r = $for;
-        while ($r !== null && $r->parent !== null) {
+        while ($r->parent !== null) {
             $chain = [...$r->middleware, ...$chain];
             $r = $r->parent;
         }
