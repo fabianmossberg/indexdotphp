@@ -25,6 +25,12 @@ it('builds a permanent redirect (301) when the status arg is given', function ()
     expect($response->header('Location'))->toBe('/new');
 });
 
+it('renders an empty body for redirects (no JSON envelope alongside Location)', function () {
+    $response = Response::redirect('/dashboard');
+
+    expect($response->body())->toBe('');
+});
+
 it('lets Response::make() be customised via fluent setters', function () {
     $response = Response::make()
         ->withStatus(201)
