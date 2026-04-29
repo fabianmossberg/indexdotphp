@@ -246,7 +246,7 @@ final class Response
         if ($this->status >= 400) {
             $envelope['error'] = [
                 'status'  => $this->status,
-                'code'    => $this->errorCode ?? self::DEFAULT_ERROR_CODES[$this->status] ?? ($this->status >= 500 ? 'SERVER_ERROR' : 'CLIENT_ERROR'),
+                'code'    => $this->effectiveErrorCode(),
                 'message' => $this->errorMessage ?? '',
             ];
         }
@@ -258,6 +258,17 @@ final class Response
             $envelope,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
+    }
+
+    private function effectiveErrorCode(): string
+    {
+        if ($this->errorCode !== null) {
+            return $this->errorCode;
+        }
+        if (isset(self::DEFAULT_ERROR_CODES[$this->status])) {
+            return self::DEFAULT_ERROR_CODES[$this->status];
+        }
+        return $this->status >= 500 ? 'SERVER_ERROR' : 'CLIENT_ERROR';
     }
 
     public function send(): void
