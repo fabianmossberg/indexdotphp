@@ -268,12 +268,11 @@ final class Response
             header_remove($name);
         }
 
-        $headers = $this->headers;
-        if ($this->status !== 204 && $this->rawBody === null && !isset($headers['Content-Type'])) {
-            $headers['Content-Type'] = 'application/json';
+        if ($this->status !== 204 && $this->rawBody === null && !isset($this->headers['Content-Type'])) {
+            $this->headers['Content-Type'] = 'application/json';
         }
 
-        foreach ($headers as $name => $value) {
+        foreach ($this->headers as $name => $value) {
             header(sprintf('%s: %s', $name, $value), true);
         }
 
