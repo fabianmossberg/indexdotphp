@@ -83,6 +83,21 @@ it('parses a JSON body to an associative array via Request::bodyJson()', functio
     expect($response->body())->toBe('{"data":{"name":"alice","age":30}}');
 });
 
+it('returns null from Request::bodyJson() when the body is empty', function () {
+    $router = new Router();
+    $router->post('/x', [], fn (): Response => Response::ok(['parsed' => Request::bodyJson()]));
+
+    $response = $router->dispatch(new ServerRequest(method: 'POST', path: '/x', body: ''));
+
+    expect($response->body())->toBe('{"data":{"parsed":null}}');
+});
+
+it('throws a JsonException from Request::bodyJson() when the body is malformed JSON', function () {
+    $req = new ServerRequest(method: 'POST', path: '/x', body: '{not valid json');
+
+    $req->bodyJson();
+})->throws(JsonException::class);
+
 it('looks up headers case-insensitively via Request::header()', function () {
     $router = new Router();
     $router->get('/x', [], fn (): Response => Response::ok([

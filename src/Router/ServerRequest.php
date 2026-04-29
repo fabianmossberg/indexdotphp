@@ -199,7 +199,7 @@ final class ServerRequest
         if ($this->rawBody === '') {
             return null;
         }
-        return json_decode($this->rawBody, $assoc);
+        return json_decode($this->rawBody, $assoc, flags: JSON_THROW_ON_ERROR);
     }
 
     public function header(string $name): ?string
