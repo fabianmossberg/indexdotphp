@@ -85,6 +85,10 @@ it('rejects non-int pagination sizes at construction time', function () {
     new Router(['default_pagination_size' => '20']);
 })->throws(InvalidArgumentException::class, 'default_pagination_size must be an int >= 1');
 
+it('rejects non-int max_pagination_size at construction time', function () {
+    new Router(['max_pagination_size' => '20']);
+})->throws(InvalidArgumentException::class, 'max_pagination_size must be an int >= 1');
+
 it('falls back to default_size when ?per_page=0 is passed', function () {
     $router = new Router();
     $router->get('/items', ['pagination' => true], fn (): Response => Response::list(

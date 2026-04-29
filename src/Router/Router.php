@@ -4,6 +4,23 @@ declare(strict_types=1);
 
 namespace IndexDotPhp\Router;
 
+/**
+ * @phpstan-type CompiledRoute array{
+ *     methods: list<string>,
+ *     pattern: string,
+ *     regex: string,
+ *     paramNames: list<string>,
+ *     specificity: list<int>,
+ *     middleware: list<callable>,
+ *     decode: array<string, string>,
+ *     decode_failure: int,
+ *     pagination: bool,
+ *     validate: ?callable,
+ *     name: ?string,
+ *     handler: callable
+ * }
+ * @phpstan-type RegisteredRoute CompiledRoute&array{router: Router}
+ */
 final class Router
 {
     private const STANDARD_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
@@ -11,7 +28,7 @@ final class Router
     private ?Router $parent = null;
     private string $prefix = '';
 
-    /** @var list<array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, validate: ?callable, name: ?string, handler: callable, router: Router}> */
+    /** @var list<RegisteredRoute> */
     private array $routes = [];
 
     private bool $sorted = true;
@@ -325,8 +342,8 @@ final class Router
     }
 
     /**
-     * @param array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, validate: ?callable, handler: callable, router: Router} $route
-     * @param array<string|int, string>                                                                                                                                                                                            $matches
+     * @param RegisteredRoute           $route
+     * @param array<string|int, string> $matches
      */
     private function executeMatched(array $route, array $matches, ServerRequest $req, bool $stripBody): Response
     {
@@ -402,8 +419,8 @@ final class Router
     }
 
     /**
-     * @param list<string> $methods
-     * @return array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, validate: ?callable, name: ?string, handler: callable}
+     * @param  list<string> $methods
+     * @return CompiledRoute  the route shape before match() attaches the owning Router
      */
     private function compile(array $methods, string $pattern, array $options, callable $handler): array
     {
