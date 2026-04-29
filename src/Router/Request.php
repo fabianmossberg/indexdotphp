@@ -6,6 +6,15 @@ namespace IndexDotPhp\Router;
 
 final class Request
 {
+    /**
+     * Attribute keys the router uses to stash parsed pagination values on the
+     * request after handling `'pagination' => true`. Exposed as constants so
+     * the Router and Request facade agree on the same name without duplicating
+     * the literal string.
+     */
+    public const PAGE_ATTR = '_page';
+    public const SIZE_ATTR = '_size';
+
     private static ?ServerRequest $bound = null;
 
     /** @internal Router calls this before each handler invocation. */
@@ -130,12 +139,12 @@ final class Request
 
     public static function page(): int
     {
-        return self::current()->attr('_page', 1);
+        return self::current()->attr(self::PAGE_ATTR, 1);
     }
 
     public static function size(): int
     {
-        return self::current()->attr('_size', 20);
+        return self::current()->attr(self::SIZE_ATTR, 20);
     }
 
     private static function current(): ServerRequest

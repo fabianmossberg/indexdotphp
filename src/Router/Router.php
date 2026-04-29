@@ -344,8 +344,8 @@ final class Router
                 $this->paginationConfig['max_size'],
             );
             $page = max(1, $bound->queryInt($this->paginationConfig['page_key'], 1));
-            $bound->setAttr('_page', $page);
-            $bound->setAttr('_size', $size);
+            $bound->setAttr(Request::PAGE_ATTR, $page);
+            $bound->setAttr(Request::SIZE_ATTR, $size);
         }
 
         Request::bind($bound);
