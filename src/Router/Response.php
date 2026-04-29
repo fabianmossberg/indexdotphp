@@ -256,8 +256,13 @@ final class Response
 
     /**
      * Human-readable error message. Returns the string passed to
-     * `Response::error($status, $message, ...)`, or null on success responses
-     * (status < 400).
+     * `Response::error($status, $message, ...)`, or null when:
+     *
+     *  - the response status is < 400 (success path), or
+     *  - the status is >= 400 but no message was ever set on the
+     *    `$errorMessage` field — e.g. `Response::make()->withStatus(500)`
+     *    or `Response::ok([])->withStatus(500)`. Unlike `errorCode()`,
+     *    there is no automatic fallback for the message.
      */
     public function errorMessage(): ?string
     {

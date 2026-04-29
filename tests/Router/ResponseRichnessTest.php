@@ -298,6 +298,14 @@ it('returns null from errorMessage() on responses whose status was bumped below 
     expect($response->errorMessage())->toBeNull();
 });
 
+it('returns null from errorMessage() on >= 400 responses where no message was ever set', function () {
+    $response = Response::make()->withStatus(500);
+
+    expect($response->status())->toBe(500);
+    expect($response->errorMessage())->toBeNull();
+    expect($response->errorCode())->toBe('INTERNAL_SERVER_ERROR'); // errorCode has a fallback; errorMessage does not
+});
+
 it('reflects withCode() updates in errorCode()', function () {
     $response = Response::error(422, 'bad input')->withCode('VALIDATION_FAILED');
 

@@ -63,7 +63,7 @@ php -S localhost:8000 -t public public/index.php
 - **Pagination**: `'pagination' => true` route option, `Response::list($data, $total)`, automatic `meta` envelope
 - **Cookies**: `Request::cookie()`, `Response::withCookie($name, $value, $options)`
 - **Headers**: `Response::withHeader / withoutHeader`, `Router::defaultHeaders([...])` for static headers on every response, `Router::stripHeaders([...])` to suppress SAPI defaults like `X-Powered-By`
-- **Response factories**: `Response::ok` / `list` (enveloped JSON), `Response::error` (error envelope), `Response::raw` / `html` / `json` / `text` (bypass envelope), `Response::noContent` / `redirect`, `Response::make()` (fluent builder)
+- **Response factories**: `Response::ok` / `Response::list` (enveloped JSON), `Response::error` (error envelope), `Response::raw` / `Response::html` / `Response::json` / `Response::text` (bypass envelope), `Response::noContent` / `Response::redirect`, `Response::make()` (fluent builder)
 - **Errors**: `Router::onError($status, callable)` for status-specific handlers (404 / 405 / decode failures), `Router::onError(callable)` for a default handler that post-processes any error response, `Router::onException(callable)` for top-level catch
 - **Built-in middleware**: `IndexDotPhp\Router\Middleware\Timing` (Server-Timing header)
 
