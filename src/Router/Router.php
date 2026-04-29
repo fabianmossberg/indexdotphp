@@ -28,10 +28,14 @@ final class Router
     private ?Router $parent = null;
     private string $prefix = '';
 
-    /** @var list<RouteShape> */
-    private array $routes = [];
-
-    private bool $sorted = true;
+    /**
+     * Shared across every Router in a prefix() chain — the root constructs
+     * one, and prefix() copies the reference into the child. Holding the
+     * route list, sort flag, and named-route map on a separate object makes
+     * it structurally impossible for a sub-router to accumulate its own
+     * stale routes.
+     */
+    private RouteTable $table;
 
     /** @var array<int, callable> */
     private array $errorHandlers;
@@ -49,9 +53,6 @@ final class Router
     private array $paginationConfig;
 
     /** @var array<string, string> */
-    private array $namedRoutes = [];
-
-    /** @var array<string, string> */
     private array $defaultHeaders = [];
 
     /** @var list<string> */
@@ -59,6 +60,7 @@ final class Router
 
     public function __construct(array $config = [])
     {
+        $this->table = new RouteTable();
         $this->errorHandlers = [
             404 => fn (): Response => Response::error(404, 'Route not found', code: 'ROUTE_NOT_FOUND'),
             405 => fn (): Response => Response::error(405, 'Method not allowed', code: 'METHOD_NOT_ALLOWED'),
@@ -112,6 +114,7 @@ final class Router
         $child = new self();
         $child->parent = $this;
         $child->prefix = $this->prefix . $segment;
+        $child->table = $this->table;
         return $child;
     }
 
@@ -174,12 +177,7 @@ final class Router
     {
         $methods = array_map(strtoupper(...), $methods);
         $compiled = $this->compile($methods, $this->prefix . $pattern, $options, $handler);
-        $root = $this->root();
-        $root->routes[] = $compiled;
-        $root->sorted = false;
-        if ($compiled['name'] !== null) {
-            $root->namedRoutes[$compiled['name']] = $compiled['pattern'];
-        }
+        $this->table->add($compiled);
         return $this;
     }
 
@@ -191,7 +189,7 @@ final class Router
      */
     public function url(string $name, array $params = []): string
     {
-        $pattern = $this->root()->namedRoutes[$name] ?? null;
+        $pattern = $this->table->patternFor($name);
         if ($pattern === null) {
             throw new \RuntimeException("No route named: {$name}");
         }
@@ -278,11 +276,6 @@ final class Router
 
     private function dispatchInner(ServerRequest $req): Response
     {
-        if (!$this->sorted) {
-            usort($this->routes, fn (array $a, array $b): int => $b['specificity'] <=> $a['specificity']);
-            $this->sorted = true;
-        }
-
         $path = rtrim($req->path, '/') ?: '/';
 
         $pathMatched     = false;
@@ -291,7 +284,7 @@ final class Router
         $matchedMatches  = null;
         $stripBody       = false;
 
-        foreach ($this->routes as $route) {
+        foreach ($this->table->sorted() as $route) {
             if (!preg_match($route['regex'], $path, $matches)) {
                 continue;
             }
