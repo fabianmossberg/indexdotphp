@@ -107,6 +107,11 @@ final class Response
         return self::raw($body, 'text/html;charset=utf-8');
     }
 
+    public static function text(string $body): self
+    {
+        return self::raw($body, 'text/plain;charset=utf-8');
+    }
+
     /**
      * Non-enveloped JSON output. The escape hatch for proxying external APIs
      * or webhooks where the framework's `{ "data": ... }` envelope is undesired.

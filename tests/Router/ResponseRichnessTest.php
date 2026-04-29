@@ -197,6 +197,24 @@ it('builds an HTML response via Response::html() with charset', function () {
     expect($response->header('Content-Type'))->toBe('text/html;charset=utf-8');
 });
 
+it('builds a plain-text response via Response::text() with charset', function () {
+    $response = Response::text('hello world');
+
+    expect($response->status())->toBe(200);
+    expect($response->body())->toBe('hello world');
+    expect($response->header('Content-Type'))->toBe('text/plain;charset=utf-8');
+});
+
+it('lets Response::text() be further customised with status and headers', function () {
+    $response = Response::text('access denied')
+        ->withStatus(403)
+        ->withHeader('X-Reason', 'forbidden');
+
+    expect($response->status())->toBe(403);
+    expect($response->body())->toBe('access denied');
+    expect($response->header('X-Reason'))->toBe('forbidden');
+});
+
 it('lets Response::html() be further customised with status and cookies', function () {
     $response = Response::html('<p>nope</p>')
         ->withStatus(404)
