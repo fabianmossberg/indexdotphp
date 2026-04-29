@@ -65,6 +65,11 @@ final class Response
 
     public static function error(int $status, string $message, ?string $code = null, mixed $data = null): self
     {
+        if ($status < 400) {
+            throw new \InvalidArgumentException(
+                "Response::error() requires a status >= 400, got {$status}",
+            );
+        }
         $r = new self($status, $data);
         $r->errorMessage = $message;
         $r->errorCode = $code;

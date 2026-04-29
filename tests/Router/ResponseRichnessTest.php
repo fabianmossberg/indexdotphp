@@ -152,3 +152,17 @@ it('renders the success envelope when status is below 400', function () {
 
     expect($response->body())->toBe('{"data":{"id":1},"message":["cache hit"]}');
 });
+
+it('rejects Response::error() with a status below 400', function () {
+    Response::error(200, 'this is not an error');
+})->throws(InvalidArgumentException::class, 'Response::error() requires a status >= 400, got 200');
+
+it('rejects Response::error() with status 399 (boundary check)', function () {
+    Response::error(399, 'still not an error');
+})->throws(InvalidArgumentException::class);
+
+it('accepts Response::error() with status exactly 400', function () {
+    $response = Response::error(400, 'bad input');
+
+    expect($response->status())->toBe(400);
+});
