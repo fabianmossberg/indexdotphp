@@ -107,6 +107,11 @@ final class Response
         return self::raw($body, 'text/html;charset=utf-8');
     }
 
+    public static function text(string $body): self
+    {
+        return self::raw($body, 'text/plain;charset=utf-8');
+    }
+
     /**
      * Non-enveloped JSON output. The escape hatch for proxying external APIs
      * or webhooks where the framework's `{ "data": ... }` envelope is undesired.
@@ -247,6 +252,39 @@ final class Response
     public function status(): int
     {
         return $this->status;
+    }
+
+    /**
+     * Human-readable error message. Returns the string passed to
+     * `Response::error($status, $message, ...)`, or null when:
+     *
+     *  - the response status is < 400 (success path), or
+     *  - the status is >= 400 but no message was ever set on the
+     *    `$errorMessage` field — e.g. `Response::make()->withStatus(500)`
+     *    or `Response::ok([])->withStatus(500)`. Unlike `errorCode()`,
+     *    there is no automatic fallback for the message.
+     */
+    public function errorMessage(): ?string
+    {
+        if ($this->status < 400) {
+            return null;
+        }
+        return $this->errorMessage;
+    }
+
+    /**
+     * Stable machine-readable error identifier. Returns the explicit code
+     * passed to `Response::error()` / `withCode()`, or the default derived
+     * from the HTTP status (`404` → `NOT_FOUND`, `429` → `TOO_MANY_REQUESTS`,
+     * unmapped 4xx → `CLIENT_ERROR`, unmapped 5xx → `SERVER_ERROR`). Returns
+     * null on success responses (status < 400).
+     */
+    public function errorCode(): ?string
+    {
+        if ($this->status < 400) {
+            return null;
+        }
+        return $this->effectiveErrorCode();
     }
 
     public function total(): ?int
