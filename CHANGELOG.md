@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/fabianmossberg/indexdotphp/compare/v1.0.0...v1.0.1) (2026-04-29)
+
+
+### Bug Fixes
+
+* code-review cleanup (redirect body, query arrays, input validation) ([#2](https://github.com/fabianmossberg/indexdotphp/issues/2)) ([cfb4584](https://github.com/fabianmossberg/indexdotphp/commit/cfb45842fbdb5214eea96d6e9e0fce07641ca63b))
+
 ## [1.0.0](https://github.com/fabianmossberg/indexdotphp/compare/v0.0.1...v1.0.0) (2026-04-29)
 
 
