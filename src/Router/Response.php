@@ -31,6 +31,13 @@ final class Response
     /** @var list<string> */
     private array $strippedHeaders = [];
 
+    /**
+     * Flags shared by `Response::json()` and the envelope encoder in
+     * `body()`. Centralised so both paths encode consistently — changing the
+     * flag set in one place updates both.
+     */
+    private const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
+
     private const DEFAULT_ERROR_CODES = [
         400 => 'BAD_REQUEST',
         401 => 'UNAUTHORIZED',
@@ -112,7 +119,7 @@ final class Response
     public static function json(mixed $data): self
     {
         return self::raw(
-            json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+            json_encode($data, self::JSON_FLAGS),
             'application/json',
         );
     }
@@ -287,10 +294,7 @@ final class Response
             $envelope['message'] = $this->messages;
         }
 
-        return json_encode(
-            $envelope,
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
-        );
+        return json_encode($envelope, self::JSON_FLAGS);
     }
 
     private function effectiveErrorCode(): string

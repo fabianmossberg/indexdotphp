@@ -230,8 +230,13 @@ it('Response::json() encodes with the same flags as the envelope encoder (unesca
 });
 
 it('Response::json() throws JsonException on unencodable input', function () {
-    Response::json(fopen('php://memory', 'r'));
-})->throws(JsonException::class);
+    $handle = fopen('php://memory', 'r');
+    try {
+        expect(fn () => Response::json($handle))->toThrow(JsonException::class);
+    } finally {
+        fclose($handle);
+    }
+});
 
 it('lets Response::json() be further customised with status and headers', function () {
     $response = Response::json(['ok' => true])
