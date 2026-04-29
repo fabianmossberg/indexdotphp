@@ -63,7 +63,8 @@ php -S localhost:8000 -t public public/index.php
 - **Pagination**: `'pagination' => true` route option, `Response::list($data, $total)`, automatic `meta` envelope
 - **Cookies**: `Request::cookie()`, `Response::withCookie($name, $value, $options)`
 - **Headers**: `Response::withHeader / withoutHeader`, `Router::defaultHeaders([...])` for static headers on every response, `Router::stripHeaders([...])` to suppress SAPI defaults like `X-Powered-By`
-- **Errors**: `Router::onError($status, callable)` for 404 / 405 / decode failures, `Router::onException(callable)` for top-level catch
+- **Response factories**: `Response::ok` / `list` (enveloped JSON), `Response::error` (error envelope), `Response::raw` / `html` / `json` / `text` (bypass envelope), `Response::noContent` / `redirect`, `Response::make()` (fluent builder)
+- **Errors**: `Router::onError($status, callable)` for status-specific handlers (404 / 405 / decode failures), `Router::onError(callable)` for a default handler that post-processes any error response, `Router::onException(callable)` for top-level catch
 - **Built-in middleware**: `IndexDotPhp\Router\Middleware\Timing` (Server-Timing header)
 
 ## Timing
@@ -156,16 +157,49 @@ Response::error(
 Built-in errors come pre-coded: `route_not_found` → `ROUTE_NOT_FOUND`,
 `method_not_allowed` → `METHOD_NOT_ALLOWED`, `decode_failure` → `DECODE_FAILED`.
 
-If you want a completely different shape (custom keys at the root, or non-JSON
-output like CSV / HTML / files), use the raw factory or fluent escape hatch:
+### Default error handler
+
+Cross-cutting error rendering — content negotiation, custom HTML pages, error
+logging — registers in one place via `onError(callable)` and runs for *any*
+error response, including handler-returned `Response::error(...)` and
+`onException` responses:
 
 ```php
-Response::raw('{"users":[],"count":0}', 'application/json');
+$router->onError(function (Response $r, ServerRequest $req): Response {
+    if ($req->accepts('text/html')) {
+        return Response::html(renderError([
+            'status'  => $r->status(),
+            'code'    => $r->errorCode(),
+            'message' => $r->errorMessage(),
+        ]))->withStatus($r->status());
+    }
+    return $r;
+});
+```
+
+The default handler runs *after* any status-specific `onError($status, $handler)`
+and post-processes the response. Status-specific handlers produce a fresh
+response (`fn (ServerRequest): Response`); the default handler post-processes
+an existing one (`fn (Response, ServerRequest): Response`). Returning another
+`Response::error(...)` from the default handler does not re-trigger it — there
+is no recursion.
+
+If you want a completely different shape (custom keys at the root, or non-JSON
+output like CSV / HTML / files), use one of the raw factories or the fluent
+escape hatch:
+
+```php
+Response::html('<h1>hello</h1>');                    // text/html;charset=utf-8
+Response::text('access denied');                      // text/plain;charset=utf-8
+Response::json(['greeting' => 'Hi']);                 // application/json, no envelope
+Response::raw($body, 'application/vnd.api+json');     // any content-type
 Response::make()->withStatus(201)->withRaw($csv, 'text/csv');
 ```
 
 Raw responses bypass the envelope entirely — `data`, `error`, `meta`, and
-`message` are not added.
+`message` are not added. `Response::json()` is specifically the *non-enveloped*
+JSON form (`{"greeting":"Hi"}`), distinct from `Response::ok()` which produces
+the framework's standard `{"data":{"greeting":"Hi"}}`.
 
 ## Running the tests
 
