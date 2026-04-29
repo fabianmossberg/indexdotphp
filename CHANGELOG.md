@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/fabianmossberg/indexdotphp/compare/v1.0.1...v1.1.0) (2026-04-29)
+
+
+### Features
+
+* **response:** add Response::html() and Response::json() helpers ([#7](https://github.com/fabianmossberg/indexdotphp/issues/7)) ([5ed36b5](https://github.com/fabianmossberg/indexdotphp/commit/5ed36b58fa1a965a1a8fcd8a244ec2dcd487d8f5))
+* **router:** allow onError to register a default error handler ([#5](https://github.com/fabianmossberg/indexdotphp/issues/5)) ([5a20a50](https://github.com/fabianmossberg/indexdotphp/commit/5a20a50fbf35e852481337e200be77ac98d1a793))
+
 ## [1.0.1](https://github.com/fabianmossberg/indexdotphp/compare/v1.0.0...v1.0.1) (2026-04-29)
 
 
