@@ -12,7 +12,7 @@ final class ServerRequest
     /** @var array<string, mixed> */
     private array $attrs = [];
 
-    /** @var array<string, string> */
+    /** @var array<string, mixed> */
     private readonly array $query;
 
     /** @var array<string, string> */
@@ -24,7 +24,13 @@ final class ServerRequest
     private readonly string $rawBody;
 
     /**
-     * @param array<string, string> $query
+     * Query values may be strings (the common case) or arrays when the URL uses
+     * PHP's bracket form (`?foo[]=a&foo[]=b`). The typed accessors (`query`,
+     * `queryInt`, `queryCsv*`, etc.) silently fall through to their defaults
+     * when the underlying value is not a string, so handlers don't need to
+     * check the shape themselves.
+     *
+     * @param array<string, mixed>  $query
      * @param array<string, string> $headers
      * @param array<string, string> $cookies
      */
@@ -44,7 +50,7 @@ final class ServerRequest
 
     /**
      * @param array<string, mixed>|null  $server
-     * @param array<string, mixed>|null  $get
+     * @param array<string, mixed>|null  $get      raw `$_GET`-style array; bracket-form values may be sub-arrays
      * @param array<string, string>|null $cookies
      */
     public static function fromGlobals(
@@ -107,13 +113,14 @@ final class ServerRequest
 
     public function query(string $name, ?string $default = null): ?string
     {
-        return $this->query[$name] ?? $default;
+        $v = $this->query[$name] ?? null;
+        return is_string($v) ? $v : $default;
     }
 
     public function queryInt(string $name, ?int $default = null): ?int
     {
         $v = $this->query[$name] ?? null;
-        if ($v === null || !ctype_digit($v)) {
+        if (!is_string($v) || !ctype_digit($v)) {
             return $default;
         }
         return (int) $v;
@@ -122,7 +129,7 @@ final class ServerRequest
     public function queryBool(string $name, bool $default = false): bool
     {
         $v = $this->query[$name] ?? null;
-        if ($v === null) {
+        if (!is_string($v)) {
             return $default;
         }
         return in_array(strtolower($v), ['true', '1', 'on', 'yes'], true);
@@ -135,7 +142,7 @@ final class ServerRequest
     public function queryCsv(string $name, array $defaults = []): array
     {
         $v = $this->query[$name] ?? null;
-        if ($v === null || $v === '') {
+        if (!is_string($v) || $v === '') {
             return $defaults;
         }
         return explode(',', $v);
@@ -149,7 +156,7 @@ final class ServerRequest
     public function queryCsvInts(string $name, array $defaults = [], array $allowed = []): array
     {
         $v = $this->query[$name] ?? null;
-        if ($v === null || $v === '') {
+        if (!is_string($v) || $v === '') {
             return $defaults;
         }
         $parts = explode(',', $v);
@@ -175,7 +182,7 @@ final class ServerRequest
     public function queryCsvStrings(string $name, array $defaults = [], array $allowed = []): array
     {
         $v = $this->query[$name] ?? null;
-        if ($v === null || $v === '') {
+        if (!is_string($v) || $v === '') {
             return $defaults;
         }
         $parts = explode(',', $v);
