@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/fabianmossberg/indexdotphp/compare/v1.1.0...v1.2.0) (2026-04-29)
+
+
+### Features
+
+* **response:** error accessors and Response::text() helper ([#9](https://github.com/fabianmossberg/indexdotphp/issues/9)) ([3cd1a02](https://github.com/fabianmossberg/indexdotphp/commit/3cd1a02d42b27f426d58b2856a3021db0d3f3709))
+
 ## [1.1.0](https://github.com/fabianmossberg/indexdotphp/compare/v1.0.1...v1.1.0) (2026-04-29)
 
 
