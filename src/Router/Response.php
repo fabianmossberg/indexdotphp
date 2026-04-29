@@ -249,6 +249,31 @@ final class Response
         return $this->status;
     }
 
+    /**
+     * Human-readable error message. Returns the string passed to
+     * `Response::error($status, $message, ...)`, or null on success responses
+     * (status < 400) and on errors built without an explicit message.
+     */
+    public function errorMessage(): ?string
+    {
+        return $this->errorMessage;
+    }
+
+    /**
+     * Stable machine-readable error identifier. Returns the explicit code
+     * passed to `Response::error()` / `withCode()`, or the default derived
+     * from the HTTP status (`404` → `NOT_FOUND`, `429` → `TOO_MANY_REQUESTS`,
+     * unmapped 4xx → `CLIENT_ERROR`, unmapped 5xx → `SERVER_ERROR`). Returns
+     * null on success responses (status < 400).
+     */
+    public function errorCode(): ?string
+    {
+        if ($this->status < 400) {
+            return null;
+        }
+        return $this->effectiveErrorCode();
+    }
+
     public function total(): ?int
     {
         return $this->total;

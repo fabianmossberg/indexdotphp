@@ -238,6 +238,48 @@ it('Response::json() throws JsonException on unencodable input', function () {
     }
 });
 
+it('exposes the error message via errorMessage() on Response::error() responses', function () {
+    $response = Response::error(500, 'Database is on fire', code: 'DB_DOWN');
+
+    expect($response->errorMessage())->toBe('Database is on fire');
+});
+
+it('exposes the explicit error code via errorCode() when one was set', function () {
+    $response = Response::error(500, 'boom', code: 'DB_DOWN');
+
+    expect($response->errorCode())->toBe('DB_DOWN');
+});
+
+it('falls back to the default error code derived from the HTTP status', function () {
+    expect(Response::error(404, 'gone')->errorCode())->toBe('NOT_FOUND');
+    expect(Response::error(429, 'slow')->errorCode())->toBe('TOO_MANY_REQUESTS');
+    expect(Response::error(500, 'oops')->errorCode())->toBe('INTERNAL_SERVER_ERROR');
+});
+
+it('falls back to CLIENT_ERROR / SERVER_ERROR for unmapped statuses on errorCode()', function () {
+    expect(Response::error(418, 'teapot')->errorCode())->toBe('CLIENT_ERROR');
+    expect(Response::error(599, 'unknown')->errorCode())->toBe('SERVER_ERROR');
+});
+
+it('returns null from errorMessage() and errorCode() on success responses', function () {
+    $response = Response::ok(['x' => 1]);
+
+    expect($response->errorMessage())->toBeNull();
+    expect($response->errorCode())->toBeNull();
+});
+
+it('returns null from errorCode() on responses whose status was bumped below 400', function () {
+    $response = Response::error(500, 'boom')->withStatus(200);
+
+    expect($response->errorCode())->toBeNull();
+});
+
+it('reflects withCode() updates in errorCode()', function () {
+    $response = Response::error(422, 'bad input')->withCode('VALIDATION_FAILED');
+
+    expect($response->errorCode())->toBe('VALIDATION_FAILED');
+});
+
 it('lets Response::json() be further customised with status and headers', function () {
     $response = Response::json(['ok' => true])
         ->withStatus(201)
