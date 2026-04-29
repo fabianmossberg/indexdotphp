@@ -37,7 +37,7 @@ final class Router
      */
     private RouteTable $table;
 
-    /** @var array<int, callable> */
+    /** @var array<int|string, callable> */
     private array $errorHandlers;
 
     /** @var callable|null */
@@ -118,8 +118,33 @@ final class Router
         return $child;
     }
 
-    public function onError(int $status, callable $handler): self
+    /**
+     * Register an error handler.
+     *
+     * Two forms:
+     *  - `onError(int $status, callable $handler)` — status-specific handler that
+     *    *produces* an error Response for that status. Signature:
+     *    `function (ServerRequest $req): Response`. Used for 404 / 405 / decoder
+     *    failure routes.
+     *  - `onError(callable $handler)` — default handler that *post-processes*
+     *    any Response with status >= 400, including handler-returned errors and
+     *    onException responses. Signature:
+     *    `function (Response $response, ServerRequest $req): Response`. Runs
+     *    after any status-specific handler so it can rewrite the body / headers
+     *    (e.g. render HTML for browser clients). Its return value is sent as-is;
+     *    re-raising another error response does not re-invoke the default.
+     */
+    public function onError(int|callable $status, ?callable $handler = null): self
     {
+        if (is_callable($status)) {
+            $this->root()->errorHandlers['*'] = $status;
+            return $this;
+        }
+        if ($handler === null) {
+            throw new \InvalidArgumentException(
+                'onError(int $status, callable $handler) requires a handler when called with a status code.',
+            );
+        }
         $this->root()->errorHandlers[$status] = $handler;
         return $this;
     }
@@ -252,17 +277,18 @@ final class Router
                 fn (ServerRequest $r): Response => $this->dispatchInner($r),
                 $this->middleware,
             );
-            return $this->applyResponsePolicy($pipeline($req));
+            return $this->applyResponsePolicy($pipeline($req), $req);
         } catch (\Throwable $e) {
             if ($this->exceptionHandler === null) {
                 throw $e;
             }
-            return $this->applyResponsePolicy(($this->exceptionHandler)($e));
+            return $this->applyResponsePolicy(($this->exceptionHandler)($e), $req);
         }
     }
 
-    private function applyResponsePolicy(Response $response): Response
+    private function applyResponsePolicy(Response $response, ServerRequest $req): Response
     {
+        $response = $this->applyDefaultErrorHandler($response, $req);
         foreach ($this->defaultHeaders as $name => $value) {
             if ($response->header($name) === null) {
                 $response->withHeader($name, $value);
@@ -272,6 +298,24 @@ final class Router
             $response->withStrippedHeaders($this->strippedHeaders);
         }
         return $response;
+    }
+
+    /**
+     * Run an error response through the registered default-error handler, if
+     * any. Non-error responses are returned untouched. The default handler's
+     * return value is final — it is not itself re-processed, so a default that
+     * accidentally returns another `Response::error(...)` is rendered as-is.
+     */
+    private function applyDefaultErrorHandler(Response $response, ServerRequest $req): Response
+    {
+        if ($response->status() < 400) {
+            return $response;
+        }
+        $default = $this->root()->errorHandlers['*'] ?? null;
+        if ($default === null) {
+            return $response;
+        }
+        return $default($response, $req);
     }
 
     private function dispatchInner(ServerRequest $req): Response
