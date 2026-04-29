@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace IndexDotPhp\Router;
 
 /**
- * @phpstan-type CompiledRoute array{
+ * @phpstan-type RouteShape array{
  *     methods: list<string>,
  *     pattern: string,
  *     regex: string,
@@ -17,9 +17,9 @@ namespace IndexDotPhp\Router;
  *     pagination: bool,
  *     validate: ?callable,
  *     name: ?string,
- *     handler: callable
+ *     handler: callable,
+ *     router: Router
  * }
- * @phpstan-type RegisteredRoute CompiledRoute&array{router: Router}
  */
 final class Router
 {
@@ -28,7 +28,7 @@ final class Router
     private ?Router $parent = null;
     private string $prefix = '';
 
-    /** @var list<RegisteredRoute> */
+    /** @var list<RouteShape> */
     private array $routes = [];
 
     private bool $sorted = true;
@@ -174,7 +174,6 @@ final class Router
     {
         $methods = array_map(strtoupper(...), $methods);
         $compiled = $this->compile($methods, $this->prefix . $pattern, $options, $handler);
-        $compiled['router'] = $this;
         $root = $this->root();
         $root->routes[] = $compiled;
         $root->sorted = false;
@@ -342,7 +341,7 @@ final class Router
     }
 
     /**
-     * @param RegisteredRoute           $route
+     * @param RouteShape                $route
      * @param array<string|int, string> $matches
      */
     private function executeMatched(array $route, array $matches, ServerRequest $req, bool $stripBody): Response
@@ -420,7 +419,7 @@ final class Router
 
     /**
      * @param  list<string> $methods
-     * @return CompiledRoute  the route shape before match() attaches the owning Router
+     * @return RouteShape
      */
     private function compile(array $methods, string $pattern, array $options, callable $handler): array
     {
@@ -459,6 +458,7 @@ final class Router
             'validate'       => $options['validate'] ?? null,
             'name'           => $options['name'] ?? null,
             'handler'        => $handler,
+            'router'         => $this,
         ];
     }
 
