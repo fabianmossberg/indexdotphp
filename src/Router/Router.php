@@ -310,7 +310,7 @@ final class Router
     }
 
     /**
-     * @param array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, handler: callable, router: Router} $route
+     * @param array{methods: list<string>, pattern: string, regex: string, paramNames: list<string>, specificity: list<int>, middleware: list<callable>, decode: array<string, string>, decode_failure: int, pagination: bool, validate: ?callable, handler: callable, router: Router} $route
      * @param array<string|int, string>                                                                                                                                                                                            $matches
      */
     private function executeMatched(array $route, array $matches, ServerRequest $req, bool $stripBody): Response
@@ -350,9 +350,20 @@ final class Router
         Request::bind($bound);
 
         $inherited = $this->collectMiddleware($route['router']);
+        $perRoute = $route['middleware'];
+        if ($route['validate'] !== null) {
+            $validate = $route['validate'];
+            $perRoute[] = static function (ServerRequest $req, callable $next) use ($validate): Response {
+                $errors = $validate($req);
+                if ($errors !== null) {
+                    return Response::error(422, 'Validation failed', code: 'VALIDATION_FAILED', data: $errors);
+                }
+                return $next($req);
+            };
+        }
         $pipeline = $this->buildPipeline(
             $route['handler'],
-            [...$inherited, ...$route['middleware']],
+            [...$inherited, ...$perRoute],
         );
         $response = $pipeline($bound);
 
@@ -412,6 +423,7 @@ final class Router
             'decode'         => $options['decode'] ?? [],
             'decode_failure' => $options['decode_failure'] ?? 404,
             'pagination'     => $options['pagination'] ?? false,
+            'validate'       => $options['validate'] ?? null,
             'name'           => $options['name'] ?? null,
             'handler'        => $handler,
         ];

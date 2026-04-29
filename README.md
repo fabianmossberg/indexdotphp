@@ -77,6 +77,7 @@ php -S localhost:8000 -t public public/index.php
 - **Middleware**: global (`$router->use(...)`), per-route (`'middleware' => [...]`), and sub-router scoped — onion model
 - **Sub-routers**: `$api = $router->prefix('/api/v1')` — nested prefixes accumulate, middleware is scoped to the subtree
 - **Decoders**: `'decode' => ['id' => 'int']` route option; built-ins for `int`, `slug`, `csv-int`, `csv-string`; register custom via `Router::registerDecoder`
+- **Validation**: `'validate' => fn($req) => $errors ?? null` route option for request-shape checks; failures auto-emit 422 with `VALIDATION_FAILED`
 - **Pagination**: `'pagination' => true` route option, `Response::list($data, $total)`, automatic `meta` envelope
 - **Cookies**: `Request::cookie()`, `Response::withCookie($name, $value, $options)`
 - **Headers**: `Response::withHeader / withoutHeader`, `Router::defaultHeaders([...])` for static headers on every response, `Router::stripHeaders([...])` to suppress SAPI defaults like `X-Powered-By`
