@@ -292,6 +292,12 @@ it('returns null from errorCode() on responses whose status was bumped below 400
     expect($response->errorCode())->toBeNull();
 });
 
+it('returns null from errorMessage() on responses whose status was bumped below 400', function () {
+    $response = Response::error(500, 'boom')->withStatus(200);
+
+    expect($response->errorMessage())->toBeNull();
+});
+
 it('reflects withCode() updates in errorCode()', function () {
     $response = Response::error(422, 'bad input')->withCode('VALIDATION_FAILED');
 

@@ -257,10 +257,13 @@ final class Response
     /**
      * Human-readable error message. Returns the string passed to
      * `Response::error($status, $message, ...)`, or null on success responses
-     * (status < 400) and on errors built without an explicit message.
+     * (status < 400).
      */
     public function errorMessage(): ?string
     {
+        if ($this->status < 400) {
+            return null;
+        }
         return $this->errorMessage;
     }
 
