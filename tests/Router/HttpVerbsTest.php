@@ -30,9 +30,9 @@ it('registers multiple methods for one pattern via match()', function () {
     expect($router->dispatch(new ServerRequest(method: 'POST', path: '/foo'))->status())->toBe(200);
 });
 
-it('matches all standard verbs via any()', function () {
+it('matches all standard verbs via standardVerbs()', function () {
     $router = new Router();
-    $router->any('/x', [], fn (): Response => Response::ok(['ok' => true]));
+    $router->standardVerbs('/x', [], fn (): Response => Response::ok(['ok' => true]));
 
     foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $method) {
         expect($router->dispatch(new ServerRequest(method: $method, path: '/x'))->status())->toBe(200);

@@ -103,7 +103,7 @@ it('looks up headers case-insensitively via Request::header()', function () {
 
 it('exposes method and path via the Request facade', function () {
     $router = new Router();
-    $router->any('/users/:id', [], fn (): Response => Response::ok([
+    $router->standardVerbs('/users/:id', [], fn (): Response => Response::ok([
         'method' => Request::method(),
         'path'   => Request::path(),
     ]));

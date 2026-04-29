@@ -204,7 +204,7 @@ final class Router
         return $this->match(['DELETE'], $pattern, $options, $handler);
     }
 
-    public function any(string $pattern, array $options, callable $handler): self
+    public function standardVerbs(string $pattern, array $options, callable $handler): self
     {
         return $this->match(self::STANDARD_METHODS, $pattern, $options, $handler);
     }
