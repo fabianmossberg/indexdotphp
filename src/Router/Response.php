@@ -95,6 +95,28 @@ final class Response
         return $r;
     }
 
+    public static function html(string $body): self
+    {
+        return self::raw($body, 'text/html;charset=utf-8');
+    }
+
+    /**
+     * Non-enveloped JSON output. The escape hatch for proxying external APIs
+     * or webhooks where the framework's `{ "data": ... }` envelope is undesired.
+     * For framework-styled JSON, prefer `Response::ok($data)`.
+     *
+     * Encoded with the same flags as the envelope encoder, so output is
+     * consistent across both shapes. Throws `\JsonException` on unencodable
+     * input — same exception type the framework documents for `Request::bodyJson()`.
+     */
+    public static function json(mixed $data): self
+    {
+        return self::raw(
+            json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+            'application/json',
+        );
+    }
+
     public static function noContent(): self
     {
         return new self(204, null);

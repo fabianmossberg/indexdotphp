@@ -188,3 +188,57 @@ it('still accepts withMessage() on success responses', function () {
 
     expect($response->body())->toBe('{"data":[],"message":["first","second"]}');
 });
+
+it('builds an HTML response via Response::html() with charset', function () {
+    $response = Response::html('<h1>hello</h1>');
+
+    expect($response->status())->toBe(200);
+    expect($response->body())->toBe('<h1>hello</h1>');
+    expect($response->header('Content-Type'))->toBe('text/html;charset=utf-8');
+});
+
+it('lets Response::html() be further customised with status and cookies', function () {
+    $response = Response::html('<p>nope</p>')
+        ->withStatus(404)
+        ->withCookie('seen_404', '1');
+
+    expect($response->status())->toBe(404);
+    expect($response->body())->toBe('<p>nope</p>');
+    expect($response->cookies())->toHaveKey('seen_404');
+});
+
+it('builds a non-enveloped JSON response via Response::json()', function () {
+    $response = Response::json(['greeting' => 'Hi']);
+
+    expect($response->status())->toBe(200);
+    expect($response->body())->toBe('{"greeting":"Hi"}');
+    expect($response->header('Content-Type'))->toBe('application/json');
+});
+
+it('Response::json() emits raw data, not the framework envelope', function () {
+    $raw = Response::json(['greeting' => 'Hi']);
+    $enveloped = Response::ok(['greeting' => 'Hi']);
+
+    expect($raw->body())->toBe('{"greeting":"Hi"}');
+    expect($enveloped->body())->toBe('{"data":{"greeting":"Hi"}}');
+});
+
+it('Response::json() encodes with the same flags as the envelope encoder (unescaped slashes)', function () {
+    $response = Response::json(['url' => 'http://example.com/a/b']);
+
+    expect($response->body())->toBe('{"url":"http://example.com/a/b"}');
+});
+
+it('Response::json() throws JsonException on unencodable input', function () {
+    Response::json(fopen('php://memory', 'r'));
+})->throws(JsonException::class);
+
+it('lets Response::json() be further customised with status and headers', function () {
+    $response = Response::json(['ok' => true])
+        ->withStatus(201)
+        ->withHeader('Location', '/x');
+
+    expect($response->status())->toBe(201);
+    expect($response->body())->toBe('{"ok":true}');
+    expect($response->header('Location'))->toBe('/x');
+});
