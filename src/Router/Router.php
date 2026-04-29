@@ -240,37 +240,37 @@ final class Router
         );
     }
 
-    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
+    /** @param RouteOptions $options */
     public function get(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['GET'], $pattern, $options, $handler);
     }
 
-    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
+    /** @param RouteOptions $options */
     public function post(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['POST'], $pattern, $options, $handler);
     }
 
-    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
+    /** @param RouteOptions $options */
     public function put(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['PUT'], $pattern, $options, $handler);
     }
 
-    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
+    /** @param RouteOptions $options */
     public function patch(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['PATCH'], $pattern, $options, $handler);
     }
 
-    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
+    /** @param RouteOptions $options */
     public function delete(string $pattern, array $options, callable $handler): self
     {
         return $this->match(['DELETE'], $pattern, $options, $handler);
     }
 
-    /** @param RouteOptions $options Route options: `middleware`, `decode`, `decode_failure`, `pagination`, `validate`, `name`. See class docblock. */
+    /** @param RouteOptions $options */
     public function standardVerbs(string $pattern, array $options, callable $handler): self
     {
         return $this->match(self::STANDARD_METHODS, $pattern, $options, $handler);
