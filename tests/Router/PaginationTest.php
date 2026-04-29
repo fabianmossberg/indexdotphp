@@ -73,6 +73,30 @@ it('does not add meta when handler returns Response::ok on a paginated route', f
     expect($response->body())->toBe('{"data":["no","total"]}');
 });
 
+it('rejects default_pagination_size <= 0 at construction time', function () {
+    new Router(['default_pagination_size' => 0]);
+})->throws(InvalidArgumentException::class, 'default_pagination_size must be >= 1');
+
+it('rejects max_pagination_size <= 0 at construction time', function () {
+    new Router(['max_pagination_size' => 0]);
+})->throws(InvalidArgumentException::class, 'max_pagination_size must be >= 1');
+
+it('falls back to default_size when ?per_page=0 is passed', function () {
+    $router = new Router();
+    $router->get('/items', ['pagination' => true], fn (): Response => Response::list(
+        [Request::size()],
+        50
+    ));
+
+    $response = $router->dispatch(new ServerRequest(
+        method: 'GET',
+        path:   '/items',
+        query:  ['per_page' => '0'],
+    ));
+
+    expect($response->body())->toBe('{"data":[20],"meta":{"total":50,"page":1,"size":20,"pages":3}}');
+});
+
 it('honours custom pagination_query_keys passed to the Router config', function () {
     $router = new Router([
         'pagination_query_keys' => ['page' => 'p', 'size' => 'limit'],
